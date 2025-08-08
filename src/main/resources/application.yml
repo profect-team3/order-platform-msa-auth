@@ -25,9 +25,6 @@ spring:
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
       database: 0
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY}
 
 jwt:
   secret: ${JWT_SECRET_KEY}
