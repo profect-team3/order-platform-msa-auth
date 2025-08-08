@@ -1,6 +1,6 @@
 spring:
   application:
-    name: order-platform-backend
+    name: order-platform-msa-auth
   config:
     import: optional:file:.env[.properties]
   datasource:
@@ -25,9 +25,6 @@ spring:
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
       database: 0
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY}
 
 jwt:
   secret: ${JWT_SECRET_KEY}
@@ -35,6 +32,4 @@ jwt:
   refresh-token-validity-in-milliseconds: 1209600000 # 14 days
 
 server:
-  port: 8081
-  servlet:
-    context-path: /api
+  port: 8084
