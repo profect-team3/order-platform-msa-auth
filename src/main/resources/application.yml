@@ -1,6 +1,6 @@
 spring:
   application:
-    name: order-platform-msa-auth
+    name: auth
   config:
     import: optional:file:.env[.properties]
   datasource:
@@ -32,4 +32,4 @@ jwt:
   refresh-token-validity-in-milliseconds: 1209600000 # 14 days
 
 server:
-  port: 8084
+  port: 8083
