@@ -2,6 +2,7 @@ package app.global.jwt;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -34,8 +35,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
 			Claims claims = jwtTokenProvider.parseClaims(token);
 
-			if (!INTERNAL_AUDIENCE.equals(claims.getAudience().iterator().next())) {
-				logger.warn("Invalid token audience. Expected '" + INTERNAL_AUDIENCE + "' but was '" + claims.getAudience() + "'");
+			Set<String> audiences = claims.getAudience();
+			if (audiences == null || !audiences.contains(INTERNAL_AUDIENCE)) {
+				logger.warn("Invalid token audience. Expected '" + INTERNAL_AUDIENCE + "' but was '" + audiences + "'");
 				filterChain.doFilter(request, response);
 				return;
 			}
