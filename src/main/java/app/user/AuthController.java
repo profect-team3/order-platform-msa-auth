@@ -36,11 +36,4 @@ public class AuthController {
 		userService.logout();
 		return ApiResponse.onSuccess(UserSuccessStatus.LOGOUT_SUCCESS, null);
 	}
-
-	@DeleteMapping("/withdraw")
-	@Operation(summary = "회원 탈퇴 API", description = "현재 로그인된 사용자의 계정을 비활성화하고 개인정보를 익명화 처리합니다.")
-	public ApiResponse<Void> withdraw() {
-		userService.withdrawMembership();
-		return ApiResponse.onSuccess(UserSuccessStatus.WITHDRAW_SUCCESS, null);
-	}
 }
