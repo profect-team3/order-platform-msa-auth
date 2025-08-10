@@ -1,6 +1,6 @@
 package app.global.config;
 
-import java.util.Collections;
+import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,18 +11,20 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import app.global.jwt.JwtAccessDeniedHandler;
 import app.global.jwt.JwtAuthenticationEntryPoint;
+import app.global.jwt.JwtAuthenticationFilter;
 import app.global.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
-@RequiredArgsConstructor
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
 	private final JwtTokenProvider jwtTokenProvider;
@@ -38,25 +40,28 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
 			.csrf(AbstractHttpConfigurer::disable)
-
+			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.exceptionHandling(exceptions -> exceptions
 				.authenticationEntryPoint(jwtAuthenticationEntryPoint)
 				.accessDeniedHandler(jwtAccessDeniedHandler)
 			)
-
-			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-			.authorizeHttpRequests(auth -> auth
+			// 5. URL 단위 기본 방어 설정
+			.authorizeHttpRequests(authz -> authz
+				// 인증 없이 접근을 허용할 경로들
 				.requestMatchers(
 					"/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources",
 					"/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui/**",
 					"/webjars/**", "/swagger-ui.html",
-					"/auth/**", "/oauth/**"
-				)
-				.permitAll()
-			);
+					"/oauth2/**",
+					"/oauth/**",
+					"/.well-known/**",
+					"/auth/signup",
+					"/auth/login"
+				).permitAll()
+				.anyRequest().authenticated()
+			)
+			.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}
@@ -64,11 +69,10 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-
-		configuration.setAllowedOrigins(Collections.singletonList("*"));
-		configuration.addAllowedMethod("*");
-		configuration.addAllowedHeader("*");
+		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setAllowCredentials(true);
+		configuration.setMaxAge(3600L);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
