@@ -16,7 +16,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import app.user.model.entity.enums.UserRole;
+import app.auth.model.entity.enums.UserRole;
 import app.global.jwt.JwtAccessDeniedHandler;
 import app.global.jwt.JwtAuthenticationEntryPoint;
 import app.global.jwt.JwtAuthenticationFilter;

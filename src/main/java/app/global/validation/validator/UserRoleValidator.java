@@ -3,7 +3,7 @@ package app.global.validation.validator;
 import java.util.Arrays;
 import java.util.List;
 
-import app.user.model.entity.enums.UserRole;
+import app.auth.model.entity.enums.UserRole;
 import app.global.validation.annotation.ValidUserRole;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
