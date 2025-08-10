@@ -6,6 +6,10 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwsHeader;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import java.security.PrivateKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -94,10 +98,19 @@ public class JwtTokenProvider {
 		try {
 			parseClaims(token);
 			return true;
-		} catch (Exception e) {
-			log.error("Invalid JWT token: {}", e.getMessage());
-			return false;
+		} catch (SignatureException e) {
+			log.warn("Invalid JWT signature: {}", e.getMessage());
+		} catch (MalformedJwtException e) {
+			log.warn("Invalid JWT token: {}", e.getMessage());
+		} catch (ExpiredJwtException e) {
+			log.warn("Expired JWT token: {}", e.getMessage());
+		} catch (UnsupportedJwtException e) {
+			log.warn("Unsupported JWT token: {}", e.getMessage());
+		} catch (IllegalArgumentException e) {
+			// parseClaims의 orElseThrow에서 발생하거나, 토큰이 비어있는 경우
+			log.warn("JWT claims string is empty or invalid: {}", e.getMessage());
 		}
+		return false;
 	}
 
 	public long getInternalTokenValidityMs() {
