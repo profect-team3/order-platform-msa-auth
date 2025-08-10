@@ -1,5 +1,8 @@
 package app.auth.model.entity;
 
+import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.TimeToLive;
+
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,29 +16,16 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "p_refresh_token")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder
-public class RefreshToken extends BaseEntity {
+@RedisHash(value = "p_refresh_token")
+public class RefreshToken {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
-
-	@Column(nullable = false, unique = true)
-	private Long userId;
-
-	@Column(nullable = false, columnDefinition = "TEXT")
 	private String token;
 
-	@Column(nullable = false)
-	private Long expiration;
+	private String userId;
 
-	public void updateToken(String token, Long expiration) {
-		this.token = token;
-		this.expiration = expiration;
-	}
+	@TimeToLive
+	private Long ttl;
 }
