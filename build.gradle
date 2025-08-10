@@ -57,6 +57,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation 'jakarta.annotation:jakarta.annotation-api'
 
     // TEST
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
