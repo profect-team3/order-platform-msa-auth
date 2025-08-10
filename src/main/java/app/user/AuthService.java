@@ -98,19 +98,4 @@ public class AuthService {
 			);
 		}
 	}
-
-	@Transactional
-	public void withdrawMembership() {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Long currentUserId = Long.parseLong(authentication.getName());
-
-		User user = userRepository.findById(currentUserId)
-			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
-
-		user.anonymizeForWithdrawal();
-
-		userRepository.delete(user);
-
-		logout();
-	}
 }
