@@ -11,15 +11,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import app.auth.model.entity.enums.UserRole;
 import app.global.jwt.JwtAccessDeniedHandler;
 import app.global.jwt.JwtAuthenticationEntryPoint;
-import app.global.jwt.JwtAuthenticationFilter;
 import app.global.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 
@@ -31,7 +28,6 @@ public class SecurityConfig {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
-	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -57,45 +53,10 @@ public class SecurityConfig {
 					"/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources",
 					"/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui/**",
 					"/webjars/**", "/swagger-ui.html",
-					"/user/signup", "/user/login", "/region/**", "/payment/**"
+					"/auth/**", "/oauth/**"
 				)
 				.permitAll()
-
-				.requestMatchers("/customer/address/**")
-				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.MANAGER.name(),
-					UserRole.MASTER.name())
-
-				.requestMatchers("/store/**")
-				.hasAnyAuthority(UserRole.OWNER.name(), UserRole.MANAGER.name(),
-					UserRole.MASTER.name())
-
-				.requestMatchers("/order/**")
-				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.OWNER.name(), UserRole.MANAGER.name(),
-					UserRole.MASTER.name())
-
-				.requestMatchers("/customer/cart/**")
-				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.MANAGER.name(),
-					UserRole.MASTER.name())
-
-				.requestMatchers("/customer/review/**")
-				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.MANAGER.name(),
-					UserRole.MASTER.name())
-
-				.requestMatchers("/customer/store/**")
-				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.MANAGER.name(),
-					UserRole.MASTER.name())
-
-				.requestMatchers("/manager/**")
-				.hasAnyAuthority(UserRole.MANAGER.name(),
-					UserRole.MASTER.name())
-
-				.requestMatchers("/owner/ai/**")
-				.hasAuthority(UserRole.OWNER.name())
-
-				.anyRequest()
-				.authenticated()
-			)
-			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+			);
 
 		return http.build();
 	}
