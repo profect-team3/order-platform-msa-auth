@@ -107,7 +107,6 @@ public class JwtTokenProvider {
 		} catch (UnsupportedJwtException e) {
 			log.warn("Unsupported JWT token: {}", e.getMessage());
 		} catch (IllegalArgumentException e) {
-			// parseClaims의 orElseThrow에서 발생하거나, 토큰이 비어있는 경우
 			log.warn("JWT claims string is empty or invalid: {}", e.getMessage());
 		}
 		return false;
@@ -115,5 +114,9 @@ public class JwtTokenProvider {
 
 	public long getInternalTokenValidityMs() {
 		return internalTokenValidityMs;
+	}
+
+	public long getRefreshTokenValidityMs() {
+		return refreshTokenValidityMs;
 	}
 }
