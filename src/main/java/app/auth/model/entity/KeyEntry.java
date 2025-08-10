@@ -1,4 +1,4 @@
-package app.auth.service;
+package app.auth.model.entity;
 
 import java.security.KeyPair;
 import java.time.Instant;

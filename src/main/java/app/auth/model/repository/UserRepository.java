@@ -1,4 +1,4 @@
-package app.auth.model;
+package app.auth.model.repository;
 
 import java.util.Optional;
 
