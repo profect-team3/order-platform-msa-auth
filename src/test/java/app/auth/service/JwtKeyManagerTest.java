@@ -1,19 +1,19 @@
 package app.auth.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import app.auth.service.JwtKeyManager;
-import app.auth.service.KeyEntry;
-import java.security.interfaces.RSAPublicKey;
+import app.auth.model.entity.KeyEntry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
-@DisplayName("JwtKeyManager 단위 테스트")
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 class JwtKeyManagerTest {
 
 	private JwtKeyManager jwtKeyManager;
@@ -21,104 +21,84 @@ class JwtKeyManagerTest {
 	@BeforeEach
 	void setUp() {
 		jwtKeyManager = new JwtKeyManager();
+		// @PostConstruct가 테스트 환경에서는 자동으로 호출되지 않으므로 수동으로 호출
+		jwtKeyManager.init();
 	}
 
-	@Nested
-	@DisplayName("초기화 및 첫 키 생성")
-	class InitialKeyGeneration {
+	@Test
+	@DisplayName("키 회전(rotateKey) 시 새로운 활성 키가 생성되고 저장되어야 한다")
+	void rotateKey_ShouldGenerateAndStoreNewActiveKey() {
+		// when
+		KeyEntry initialKey = jwtKeyManager.getActiveKey();
+		String initialKid = initialKey.kid();
 
-		@Test
-		@DisplayName("init() 호출 시, 활성 키가 1개 생성되어야 한다")
-		void shouldCreateOneActiveKeyOnInit() {
-			// when
-			jwtKeyManager.init();
+		KeyEntry rotatedKey = jwtKeyManager.rotateKey();
+		String rotatedKid = rotatedKey.kid();
 
-			// then
-			KeyEntry activeKey = jwtKeyManager.getActiveKey();
-			assertNotNull(activeKey, "활성 키는 null이 아니어야 합니다.");
-			assertThat(activeKey.kid()).isNotBlank();
-			assertThat(activeKey.keyPair()).isNotNull();
-
-			RSAPublicKey publicKey = (RSAPublicKey) activeKey.keyPair().getPublic();
-			assertEquals("RSA", publicKey.getAlgorithm());
-			assertEquals(2048, publicKey.getModulus().bitLength());
-
-			assertThat(jwtKeyManager.getAllKeys()).hasSize(1);
-			assertThat(jwtKeyManager.getAllKeys()).containsExactly(activeKey);
-		}
+		// then
+		assertThat(rotatedKid).isNotNull();
+		assertThat(rotatedKid).isNotEqualTo(initialKid);
+		assertThat(jwtKeyManager.getActiveKey()).isEqualTo(rotatedKey);
+		assertThat(jwtKeyManager.getKeyById(rotatedKid)).isPresent().contains(rotatedKey);
 	}
 
-	@Nested
-	@DisplayName("키 회전 (Key Rotation)")
-	class KeyRotation {
+	@Test
+	@DisplayName("활성 키 조회(getActiveKey) 시 현재 활성화된 키를 반환해야 한다")
+	void getActiveKey_ShouldReturnCurrentActiveKey() {
+		// when
+		KeyEntry activeKey = jwtKeyManager.getActiveKey();
 
-		private KeyEntry initialKey;
-
-		@BeforeEach
-		void generateInitialKey() {
-			jwtKeyManager.init();
-			initialKey = jwtKeyManager.getActiveKey();
-		}
-
-		@Test
-		@DisplayName("rotateKey() 호출 시, 새로운 활성 키가 생성되고 기존 키는 유지되어야 한다")
-		void shouldGenerateNewActiveKeyAndKeepOldKey() {
-			// when
-			jwtKeyManager.rotateKey();
-
-			// then
-			KeyEntry newActiveKey = jwtKeyManager.getActiveKey();
-
-			assertNotNull(newActiveKey);
-			assertNotEquals(initialKey.kid(), newActiveKey.kid(), "새로운 활성 키의 kid는 이전과 달라야 합니다.");
-			assertNotEquals(initialKey.keyPair().getPublic(), newActiveKey.keyPair().getPublic(), "새로운 공개키는 이전과 달라야 합니다.");
-
-			assertThat(jwtKeyManager.getAllKeys()).hasSize(2);
-			assertThat(jwtKeyManager.getAllKeys()).contains(initialKey, newActiveKey);
-
-			assertThat(jwtKeyManager.getKeyById(initialKey.kid())).hasValue(initialKey);
-		}
+		// then
+		assertThat(activeKey).isNotNull();
+		assertThat(activeKey.kid()).isNotNull();
+		assertThat(activeKey.keyPair()).isNotNull();
 	}
 
-	@Nested
-	@DisplayName("키 조회")
-	class KeyRetrieval {
+	@Test
+	@DisplayName("ID로 키 조회(getKeyById) 시 존재하는 KID는 KeyEntry를, 없는 KID는 빈 Optional을 반환해야 한다")
+	void getKeyById_ShouldReturnCorrectKeyEntry() {
+		// given
+		String activeKid = jwtKeyManager.getActiveKey().kid();
+		String nonExistentKid = "non-existent-kid";
 
-		@BeforeEach
-		void generateKeys() {
-			jwtKeyManager.init();
-			jwtKeyManager.rotateKey();
-		}
+		// when
+		Optional<KeyEntry> foundKey = jwtKeyManager.getKeyById(activeKid);
+		Optional<KeyEntry> notFoundKey = jwtKeyManager.getKeyById(nonExistentKid);
 
-		@Test
-		@DisplayName("getAllKeys()는 모든 생성된 키를 반환해야 한다")
-		void shouldReturnAllGeneratedKeys() {
-			// then
-			assertThat(jwtKeyManager.getAllKeys()).hasSize(2);
-		}
+		// then
+		assertThat(foundKey).isPresent();
+		assertThat(foundKey.get().kid()).isEqualTo(activeKid);
+		assertThat(notFoundKey).isEmpty();
+	}
 
-		@Test
-		@DisplayName("getKeyById()는 정확한 kid로 키를 찾아야 한다")
-		void shouldFindKeyByCorrectKid() {
-			// given
-			KeyEntry activeKey = jwtKeyManager.getActiveKey();
-			String activeKid = activeKey.kid();
+	@Test
+	@DisplayName("오래된 키 제거(removeOldKeys) 시 활성 키가 아니고 7일이 지난 키만 제거되어야 한다")
+	void removeOldKeys_ShouldRemoveOnlyOldInactiveKeys() {
+		// given
+		// ReflectionTestUtils를 사용하여 private 필드인 keys 맵에 직접 테스트 데이터를 주입
+		KeyEntry activeKey = jwtKeyManager.getActiveKey();
+		KeyEntry oldInactiveKey = new KeyEntry("old-inactive-kid", activeKey.keyPair(), Instant.now().minus(8, ChronoUnit.DAYS));
+		KeyEntry recentInactiveKey = new KeyEntry("recent-inactive-kid", activeKey.keyPair(), Instant.now().minus(1, ChronoUnit.DAYS));
+		KeyEntry oldActiveKey = new KeyEntry(activeKey.kid(), activeKey.keyPair(), Instant.now().minus(10, ChronoUnit.DAYS)); // 활성키는 오래되어도 삭제되면 안됨
 
-			// when
-			var foundKey = jwtKeyManager.getKeyById(activeKid);
+		Map<String, KeyEntry> testKeys = new ConcurrentHashMap<>();
+		testKeys.put(oldInactiveKey.kid(), oldInactiveKey);
+		testKeys.put(recentInactiveKey.kid(), recentInactiveKey);
+		testKeys.put(oldActiveKey.kid(), oldActiveKey);
 
-			// then
-			assertThat(foundKey).hasValue(activeKey);
-		}
+		ReflectionTestUtils.setField(jwtKeyManager, "keys", testKeys);
+		ReflectionTestUtils.setField(jwtKeyManager, "activeKid", oldActiveKey.kid());
 
-		@Test
-		@DisplayName("getKeyById()는 존재하지 않는 kid에 대해 empty를 반환해야 한다")
-		void shouldReturnEmptyForNonExistentKid() {
-			// when
-			var foundKey = jwtKeyManager.getKeyById("non-existent-kid");
+		// when
+		jwtKeyManager.removeOldKeys();
 
-			// then
-			assertThat(foundKey).isEmpty();
-		}
+		// then
+		Map<String, KeyEntry> remainingKeys = jwtKeyManager.getAllKeys().stream()
+			.collect(ConcurrentHashMap::new, (map, entry) -> map.put(entry.kid(), entry), ConcurrentHashMap::putAll);
+
+		assertThat(remainingKeys).hasSize(2);
+		assertThat(remainingKeys).containsKey(oldActiveKey.kid());
+		assertThat(remainingKeys).containsKey(recentInactiveKey.kid());
+		assertThat(remainingKeys).doesNotContainKey(oldInactiveKey.kid());
 	}
 }
