@@ -1,14 +1,14 @@
-package app.user;
+package app.auth.controller;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import app.user.model.dto.request.LoginRequest;
-import app.user.model.dto.response.LoginResponse;
-import app.user.status.UserSuccessStatus;
+import app.auth.model.dto.request.LoginRequest;
+import app.auth.model.dto.response.LoginResponse;
+import app.auth.service.AuthService;
+import app.auth.status.UserSuccessStatus;
 import app.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

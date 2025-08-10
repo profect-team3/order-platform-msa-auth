@@ -1,6 +1,6 @@
-package app.user.model.dto.request;
+package app.auth.model.dto.request;
 
-import app.user.model.entity.enums.UserRole;
+import app.auth.model.entity.enums.UserRole;
 import app.global.validation.annotation.ValidUserRole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

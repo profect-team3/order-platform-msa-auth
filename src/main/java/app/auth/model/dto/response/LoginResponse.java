@@ -1,4 +1,4 @@
-package app.user.model.dto.response;
+package app.auth.model.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

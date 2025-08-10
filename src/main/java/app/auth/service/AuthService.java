@@ -1,8 +1,7 @@
-package app.user;
+package app.auth.service;
 
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,14 +9,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import app.user.model.UserRepository;
-import app.user.model.dto.request.CreateUserRequest;
-import app.user.model.dto.request.LoginRequest;
-import app.user.model.dto.response.CreateUserResponse;
-import app.user.model.dto.response.GetUserInfoResponse;
-import app.user.model.dto.response.LoginResponse;
-import app.user.model.entity.User;
-import app.user.status.UserErrorStatus;
+import app.auth.model.UserRepository;
+import app.auth.model.dto.request.LoginRequest;
+import app.auth.model.dto.response.LoginResponse;
+import app.auth.model.entity.User;
+import app.auth.status.UserErrorStatus;
 import app.global.SecurityUtil;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;

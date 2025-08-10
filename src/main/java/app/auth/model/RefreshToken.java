@@ -1,4 +1,4 @@
-package app.user.model;
+package app.auth.model;
 
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;

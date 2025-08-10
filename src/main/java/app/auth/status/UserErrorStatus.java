@@ -1,4 +1,4 @@
-package app.user.status;
+package app.auth.status;
 
 import org.springframework.http.HttpStatus;
 

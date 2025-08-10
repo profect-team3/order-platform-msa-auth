@@ -1,6 +1,6 @@
-package app.user.model.dto.response;
+package app.auth.model.dto.response;
 
-import app.user.model.entity.User;
+import app.auth.model.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

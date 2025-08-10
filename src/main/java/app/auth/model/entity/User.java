@@ -1,9 +1,9 @@
-package app.user.model.entity;
+package app.auth.model.entity;
 
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
-import app.user.model.entity.enums.UserRole;
+import app.auth.model.entity.enums.UserRole;
 import app.global.entity.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
