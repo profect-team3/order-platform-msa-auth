@@ -1,5 +1,6 @@
 package app.auth.service;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.RedisTemplate;
@@ -9,7 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import app.auth.model.UserRepository;
+import app.auth.model.repository.UserRepository;
 import app.auth.model.dto.request.LoginRequest;
 import app.auth.model.dto.response.LoginResponse;
 import app.auth.model.entity.User;
@@ -31,9 +32,7 @@ public class AuthService {
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RedisTemplate<String, String> redisTemplate;
-	private final SecurityUtil securityUtil;
 	private static final String REFRESH_TOKEN_PREFIX = "RT:";
-	private static final String BLACKLIST_PREFIX = "BL:";
 
 	@Transactional
 	public LoginResponse login(LoginRequest request) {
@@ -44,13 +43,15 @@ public class AuthService {
 			throw new GeneralException(UserErrorStatus.INVALID_PASSWORD);
 		}
 
-		String accessToken = jwtTokenProvider.createAccessToken(user);
-		String refreshToken = jwtTokenProvider.createRefreshToken(user);
+		List<String> roles = List.of(user.getUserRole().name());
+
+		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId().toString(), roles);
+		String refreshToken = jwtTokenProvider.createRefreshToken();
 
 		redisTemplate.opsForValue().set(
 			REFRESH_TOKEN_PREFIX + user.getUserId(),
 			refreshToken,
-			jwtTokenProvider.getRefreshTokenValidityInMilliseconds(),
+			jwtTokenProvider.getRefreshTokenValidityMs(),
 			TimeUnit.MILLISECONDS
 		);
 
@@ -70,28 +71,14 @@ public class AuthService {
 		}
 
 		String userId = authentication.getName();
-		Object credentials = authentication.getCredentials();
-		if (!(credentials instanceof String accessToken)) {
-			String refreshTokenKey = REFRESH_TOKEN_PREFIX + userId;
-			if (Boolean.TRUE.equals(redisTemplate.hasKey(refreshTokenKey))) {
-				redisTemplate.delete(refreshTokenKey);
-			}
-			return;
-		}
-
 		String refreshTokenKey = REFRESH_TOKEN_PREFIX + userId;
-		if (Boolean.TRUE.equals(redisTemplate.hasKey(refreshTokenKey))) {
-			redisTemplate.delete(refreshTokenKey);
-		}
 
-		Long expiration = jwtTokenProvider.getExpiration(accessToken);
-		if (expiration > 0) {
-			redisTemplate.opsForValue().set(
-				BLACKLIST_PREFIX + accessToken,
-				"logout",
-				expiration,
-				TimeUnit.MILLISECONDS
-			);
+		Boolean hasKey = redisTemplate.hasKey(refreshTokenKey);
+		if (hasKey != null && hasKey) {
+			redisTemplate.delete(refreshTokenKey);
+			log.info("로그아웃 처리 완료: 사용자 ID '{}'의 Refresh Token이 삭제되었습니다.", userId);
+		} else {
+			log.warn("로그아웃 시도: 사용자 ID '{}'의 Refresh Token을 찾을 수 없습니다.", userId);
 		}
 	}
 }
