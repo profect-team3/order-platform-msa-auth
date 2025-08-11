@@ -71,7 +71,7 @@ public class User extends BaseEntity {
 	 */
 	public void anonymizeForWithdrawal() {
 		this.username = "withdrawn_user_" + this.userId;
-		this.password = "withdrawn_password"; // 더 이상 로그인 불가
+		this.password = "withdrawn_password";
 		this.email = "withdrawn_" + this.userId + "@example.com";
 		this.nickname = "탈퇴한 사용자";
 		this.realName = "탈퇴한 사용자";

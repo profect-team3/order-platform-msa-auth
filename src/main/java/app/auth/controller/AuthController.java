@@ -21,19 +21,19 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/auth")
 public class AuthController {
 
-	private final AuthService userService;
+	private final AuthService authService;
 
 	@PostMapping("/login")
 	@Operation(summary = "로그인 API", description = "아이디와 비밀번호로 로그인하여 토큰을 발급받습니다.")
 	public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-		LoginResponse response = userService.login(request);
+		LoginResponse response = authService.login(request);
 		return ApiResponse.onSuccess(UserSuccessStatus.LOGIN_SUCCESS, response);
 	}
 
 	@PostMapping("/logout")
-	@Operation(summary = "로그아웃 API", description = "서버에 저장된 Refresh Token을 삭제하고 현재 Access Token을 비활성화 처리합니다.")
+	@Operation(summary = "로그아웃 API", description = "서버에 저장된 Refresh Token을 삭제합니다.")
 	public ApiResponse<Void> logout() {
-		userService.logout();
+		authService.logout();
 		return ApiResponse.onSuccess(UserSuccessStatus.LOGOUT_SUCCESS, null);
 	}
 }
