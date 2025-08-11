@@ -46,9 +46,7 @@ public class SecurityConfig {
 				.authenticationEntryPoint(jwtAuthenticationEntryPoint)
 				.accessDeniedHandler(jwtAccessDeniedHandler)
 			)
-			// 5. URL 단위 기본 방어 설정
 			.authorizeHttpRequests(authz -> authz
-				// 인증 없이 접근을 허용할 경로들
 				.requestMatchers(
 					"/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources",
 					"/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui/**",
@@ -56,8 +54,7 @@ public class SecurityConfig {
 					"/oauth2/**",
 					"/oauth/**",
 					"/.well-known/**",
-					"/auth/signup",
-					"/auth/login"
+					"/login"
 				).permitAll()
 				.anyRequest().authenticated()
 			)
