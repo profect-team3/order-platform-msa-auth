@@ -27,9 +27,8 @@ spring:
       database: 0
 
 jwt:
-  secret: ${JWT_SECRET_KEY}
   access-token-validity-in-milliseconds: 3600000 # 1 hour
   refresh-token-validity-in-milliseconds: 1209600000 # 14 days
 
 server:
-  port: 8084
+  port: 8083
