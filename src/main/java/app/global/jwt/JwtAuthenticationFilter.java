@@ -35,13 +35,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
 			Claims claims = jwtTokenProvider.parseClaims(token);
 
-			Set<String> audiences = claims.getAudience();
-			if (audiences == null || !audiences.contains(INTERNAL_AUDIENCE)) {
-				logger.warn("Invalid token audience. Expected '" + INTERNAL_AUDIENCE + "' but was '" + audiences + "'");
-				filterChain.doFilter(request, response);
-				return;
-			}
-
 			@SuppressWarnings("unchecked")
 			List<String> roles = (List<String>) claims.get("roles", List.class);
 
@@ -51,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
 				claims.getSubject(),
-				null,
+				token,
 				authorities
 			);
 
