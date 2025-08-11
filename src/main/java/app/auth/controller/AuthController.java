@@ -15,10 +15,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "Auth", description = "로그인, RefreshToken")
+@Tag(name = "Auth", description = "로그인, 로그아웃")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/auth")
+@RequestMapping("")
 public class AuthController {
 
 	private final AuthService authService;
