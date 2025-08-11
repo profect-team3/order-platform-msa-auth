@@ -11,7 +11,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum UserErrorStatus implements BaseCode {
 
-	INVALID_PASSWORD(HttpStatus.FORBIDDEN, "AUTH_001", "비밀번호가 일치하지 않습니다."),
+	INVALID_PASSWORD(HttpStatus.FORBIDDEN, "AUTH001", "비밀번호가 일치하지 않습니다."),
 
 	USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER001", "이미 존재하는 유저입니다."),
 	EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER002", "이미 사용 중인 이메일입니다."),
