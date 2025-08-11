@@ -112,6 +112,10 @@ public class JwtTokenProvider {
 		return false;
 	}
 
+	public Date getExpirationDate(String token) {
+		return parseClaims(token).getExpiration();
+	}
+
 	public long getInternalTokenValidityMs() {
 		return internalTokenValidityMs;
 	}
