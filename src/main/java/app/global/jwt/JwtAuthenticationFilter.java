@@ -1,14 +1,18 @@
 package app.global.jwt;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,38 +23,40 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-	public static final String AUTHORIZATION_HEADER = "Authorization";
-	public static final String BEARER_PREFIX = "Bearer ";
-	public static final String BLACKLIST_PREFIX = "BL:";
-
+	private static final String INTERNAL_AUDIENCE = "internal-services";
 	private final JwtTokenProvider jwtTokenProvider;
-	private final RedisTemplate<String, String> redisTemplate;
 
-	// 실제 필터링 로직은 doFilterInternal 에 들어감
-	// JWT 토큰의 인증 정보를 현재 쓰레드의 SecurityContext 에 저장하는 역할 수행
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-		FilterChain filterChain) throws
-		IOException,
-		ServletException {
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+		throws ServletException, IOException {
 
-		String jwt = resolveToken(request);
+		String token = resolveToken(request);
 
-		// 정상 토큰이고, 블랙리스트에 없는 경우에만 Authentication 을 가져와서 SecurityContext 에 저장
-		if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
-			// 블랙리스트에 토큰이 있는지 확인
-			if (redisTemplate.opsForValue().get(BLACKLIST_PREFIX + jwt) == null) {
-				Authentication authentication = jwtTokenProvider.getAuthentication(jwt);
-				SecurityContextHolder.getContext().setAuthentication(authentication);
-			}
+		if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
+			Claims claims = jwtTokenProvider.parseClaims(token);
+
+			@SuppressWarnings("unchecked")
+			List<String> roles = (List<String>) claims.get("roles", List.class);
+
+			List<SimpleGrantedAuthority> authorities = roles.stream()
+				.map(SimpleGrantedAuthority::new)
+				.collect(Collectors.toList());
+
+			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+				claims.getSubject(),
+				token,
+				authorities
+			);
+
+			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}
 
 		filterChain.doFilter(request, response);
 	}
 
 	private String resolveToken(HttpServletRequest request) {
-		String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-		if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
+		String bearerToken = request.getHeader("Authorization");
+		if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
 			return bearerToken.substring(7);
 		}
 		return null;

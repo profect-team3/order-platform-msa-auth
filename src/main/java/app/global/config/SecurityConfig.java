@@ -1,6 +1,6 @@
 package app.global.config;
 
-import java.util.Collections;
+import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +16,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import app.user.model.entity.enums.UserRole;
 import app.global.jwt.JwtAccessDeniedHandler;
 import app.global.jwt.JwtAuthenticationEntryPoint;
 import app.global.jwt.JwtAuthenticationFilter;
@@ -24,14 +23,13 @@ import app.global.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
-@RequiredArgsConstructor
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-	private final JwtTokenProvider jwtTokenProvider;
+	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
-	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -42,58 +40,23 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
 			.csrf(AbstractHttpConfigurer::disable)
-
+			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.exceptionHandling(exceptions -> exceptions
 				.authenticationEntryPoint(jwtAuthenticationEntryPoint)
 				.accessDeniedHandler(jwtAccessDeniedHandler)
 			)
-
-			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-			.authorizeHttpRequests(auth -> auth
+			.authorizeHttpRequests(authz -> authz
 				.requestMatchers(
 					"/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources",
 					"/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui/**",
 					"/webjars/**", "/swagger-ui.html",
-					"/user/signup", "/user/login", "/region/**", "/payment/**"
-				)
-				.permitAll()
-
-				.requestMatchers("/customer/address/**")
-				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.MANAGER.name(),
-					UserRole.MASTER.name())
-
-				.requestMatchers("/store/**")
-				.hasAnyAuthority(UserRole.OWNER.name(), UserRole.MANAGER.name(),
-					UserRole.MASTER.name())
-
-				.requestMatchers("/order/**")
-				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.OWNER.name(), UserRole.MANAGER.name(),
-					UserRole.MASTER.name())
-
-				.requestMatchers("/customer/cart/**")
-				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.MANAGER.name(),
-					UserRole.MASTER.name())
-
-				.requestMatchers("/customer/review/**")
-				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.MANAGER.name(),
-					UserRole.MASTER.name())
-
-				.requestMatchers("/customer/store/**")
-				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.MANAGER.name(),
-					UserRole.MASTER.name())
-
-				.requestMatchers("/manager/**")
-				.hasAnyAuthority(UserRole.MANAGER.name(),
-					UserRole.MASTER.name())
-
-				.requestMatchers("/owner/ai/**")
-				.hasAuthority(UserRole.OWNER.name())
-
-				.anyRequest()
-				.authenticated()
+					"/oauth2/**",
+					"/oauth/**",
+					"/.well-known/**",
+					"/login"
+				).permitAll()
+				.anyRequest().authenticated()
 			)
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -103,11 +66,10 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-
-		configuration.setAllowedOrigins(Collections.singletonList("*"));
-		configuration.addAllowedMethod("*");
-		configuration.addAllowedHeader("*");
+		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setAllowCredentials(true);
+		configuration.setMaxAge(3600L);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
