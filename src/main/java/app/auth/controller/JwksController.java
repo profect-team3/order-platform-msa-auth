@@ -22,22 +22,42 @@ public class JwksController {
 	private final JwtKeyManager jwtKeyManager;
 
 	@GetMapping(value = "/jwks", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Map<String, List<Map<String, Object>>>> getJwks() {
-		List<Map<String, Object>> keys = jwtKeyManager.getAllKeys().stream().map(entry -> {
-			RSAPublicKey publicKey = (RSAPublicKey) entry.keyPair().getPublic();
-
-			return Map.<String, Object>of(
-				"kty", "RSA",
-				"kid", entry.kid(),
-				"use", "sig",
-				"alg", "RS256",
-				"n", Base64.getUrlEncoder().withoutPadding().encodeToString(publicKey.getModulus().toByteArray()),
-				"e", Base64.getUrlEncoder().withoutPadding().encodeToString(publicKey.getPublicExponent().toByteArray())
-			);
-		}).collect(Collectors.toList());
-
-		Map<String, List<Map<String, Object>>> jwks = Map.of("keys", keys);
-
-		return ResponseEntity.ok(jwks);
+	public ResponseEntity<Map<String, List<Map<String, Object>>>> jwks() {
+		return ResponseEntity.ok(buildJwks());
 	}
+
+	private Map<String, List<Map<String, Object>>> buildJwks() {
+		List<Map<String, Object>> keys = jwtKeyManager.getAllKeys().stream()
+			.map(entry -> {
+				RSAPublicKey pub = (RSAPublicKey) entry.keyPair().getPublic();
+
+				byte[] nBytes = stripLeadingZero(pub.getModulus().toByteArray());
+				byte[] eBytes = stripLeadingZero(pub.getPublicExponent().toByteArray());
+
+				String n = Base64.getUrlEncoder().withoutPadding().encodeToString(nBytes);
+				String e = Base64.getUrlEncoder().withoutPadding().encodeToString(eBytes);
+
+				return Map.<String, Object>of(
+					"kty", "RSA",
+					"kid", entry.kid(),
+					"use", "sig",
+					"alg", "RS256",
+					"n", n,
+					"e", e
+				);
+			})
+			.collect(Collectors.toList());
+
+		return Map.of("keys", keys);
+	}
+
+	private static byte[] stripLeadingZero(byte[] bytes) {
+		if (bytes.length > 1 && bytes[0] == 0x00) {
+			byte[] copy = new byte[bytes.length - 1];
+			System.arraycopy(bytes, 1, copy, 0, copy.length);
+			return copy;
+		}
+		return bytes;
+	}
+
 }
