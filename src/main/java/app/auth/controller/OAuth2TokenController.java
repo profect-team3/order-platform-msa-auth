@@ -2,6 +2,7 @@ package app.auth.controller;
 
 import app.auth.service.OAuth2TokenService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
@@ -15,18 +16,26 @@ public class OAuth2TokenController {
 
 	private final OAuth2TokenService oauth2TokenService;
 
-	@PostMapping("/token")
+	@PostMapping(
+		value = "/token",
+		consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+		produces = MediaType.APPLICATION_JSON_VALUE
+	)
 	public ResponseEntity<Map<String, Object>> issueToken(
 		@RequestHeader("Authorization") String authorizationHeader,
 		@RequestParam MultiValueMap<String, String> parameters) {
 
 		String grantType = parameters.getFirst("grant_type");
-
-		if ("client_credentials".equals(grantType)) {
-			Map<String, Object> tokenResponse = oauth2TokenService.issueTokenForClientCredentials(authorizationHeader);
-			return ResponseEntity.ok(tokenResponse);
+		if (!"client_credentials".equals(grantType)) {
+			return ResponseEntity.badRequest().body(Map.of("error", "unsupported_grant_type"));
 		}
 
-		return ResponseEntity.badRequest().body(Map.of("error", "unsupported_grant_type"));
+
+		String userId = parameters.getFirst("user_id");
+
+		Map<String, Object> tokenResponse =
+			oauth2TokenService.issueTokenForClientCredentials(authorizationHeader, userId);
+
+		return ResponseEntity.ok(tokenResponse);
 	}
 }

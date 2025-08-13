@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Base64;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -15,7 +16,7 @@ public class OAuth2TokenService {
 	private final ServiceAccountService serviceAccountService;
 	private final JwtTokenProvider jwtTokenProvider;
 
-	public Map<String, Object> issueTokenForClientCredentials(String authorizationHeader) {
+	public Map<String, Object> issueTokenForClientCredentials(String authorizationHeader, String userId) {
 		if (authorizationHeader == null || !authorizationHeader.toLowerCase().startsWith("basic ")) {
 			throw new IllegalArgumentException("Missing or invalid Basic authorization header");
 		}
@@ -33,7 +34,7 @@ public class OAuth2TokenService {
 
 		ServiceAccount account = serviceAccountService.authenticate(clientId, clientSecret);
 
-		String accessToken = jwtTokenProvider.createInternalToken(account.getServiceName());
+		String accessToken = jwtTokenProvider.createInternalToken(account.getServiceName(),userId);
 		long expiresIn = jwtTokenProvider.getInternalTokenValidityMs() / 1000;
 
 		return Map.of(
