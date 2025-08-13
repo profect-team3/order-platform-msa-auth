@@ -54,7 +54,7 @@ public class SecurityConfig {
 					"/oauth2/**",
 					"/oauth/**",
 					"/.well-known/**",
-					"/login"
+					"/login","/oauth2/token", "/oauth/jwks"
 				).permitAll()
 				.anyRequest().authenticated()
 			)

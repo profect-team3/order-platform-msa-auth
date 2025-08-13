@@ -5,14 +5,12 @@ import app.auth.model.entity.KeyEntry;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwsHeader;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import java.security.PrivateKey;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
@@ -39,27 +37,11 @@ public class JwtTokenProvider {
 	private long internalTokenValidityMs;
 
 	public String createAccessToken(String userId, List<String> roles) {
-		Claims claims = Jwts.claims().subject(userId).build();
-		claims.put("roles", roles);
-		return createToken(claims, accessTokenValidityMs);
+		return createToken(userId, roles, accessTokenValidityMs);
 	}
-
 	public String createRefreshToken() {
-		Claims claims = Jwts.claims().build();
-		return createToken(claims, refreshTokenValidityMs);
-	}
-
-	public String createInternalToken(String serviceName) {
-		Claims claims = Jwts.claims()
-			.subject(serviceName)
-			.add("aud", "internal-services")
-			.build();
-		return createToken(claims, internalTokenValidityMs);
-	}
-
-	private String createToken(Claims claims, long validityMs) {
 		Instant now = Instant.now();
-		Instant validity = now.plus(validityMs, ChronoUnit.MILLIS);
+		Instant validity = now.plusMillis(refreshTokenValidityMs);
 
 		KeyEntry activeKey = jwtKeyManager.getActiveKey();
 		if (activeKey == null) {
@@ -69,11 +51,54 @@ public class JwtTokenProvider {
 		String kid = activeKey.kid();
 
 		return Jwts.builder()
-			.claims(claims)
 			.issuedAt(Date.from(now))
 			.expiration(Date.from(validity))
 			.header().keyId(kid).and()
-			.signWith(privateKey, SignatureAlgorithm.RS256)
+			.signWith(privateKey, Jwts.SIG.RS256) // JJWT 0.12 API
+			.compact();
+	}
+
+	public String createInternalToken(String serviceName,String userId) {
+		Instant now = Instant.now();
+		Instant validity = now.plusMillis(internalTokenValidityMs);
+
+		KeyEntry activeKey = jwtKeyManager.getActiveKey();
+		if (activeKey == null) {
+			throw new IllegalStateException("No active signing key is available.");
+		}
+		PrivateKey privateKey = activeKey.keyPair().getPrivate();
+		String kid = activeKey.kid();
+
+		return Jwts.builder()
+			.subject(serviceName)
+			.claim("aud", "internal-services")
+			.claim("user_id", userId)
+			.issuedAt(Date.from(now))
+			.expiration(Date.from(validity))
+			.header().keyId(kid).and()
+			.signWith(privateKey, Jwts.SIG.RS256)
+			.compact();
+	}
+
+
+	private String createToken(String userId, List<String> roles, long validityMs) {
+		Instant now = Instant.now();
+		Instant validity = now.plusMillis(validityMs);
+
+		KeyEntry activeKey = jwtKeyManager.getActiveKey();
+		if (activeKey == null) {
+			throw new IllegalStateException("No active signing key is available.");
+		}
+		PrivateKey privateKey = activeKey.keyPair().getPrivate();
+		String kid = activeKey.kid();
+
+		return Jwts.builder()
+			.subject(userId)
+			.claim("roles", roles)  // 여기서 바로 claim 추가
+			.issuedAt(Date.from(now))
+			.expiration(Date.from(validity))
+			.header().keyId(kid).and()
+			.signWith(privateKey, Jwts.SIG.RS256) // JJWT 0.12 API
 			.compact();
 	}
 

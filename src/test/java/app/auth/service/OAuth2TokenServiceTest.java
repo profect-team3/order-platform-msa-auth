@@ -37,17 +37,18 @@ class OAuth2TokenServiceTest {
 		String serviceName = "internal-service-name";
 		String credentials = Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes());
 		String authHeader = "Basic " + credentials;
+		String userId="2L";
 
 		ServiceAccount mockAccount = new ServiceAccount(clientId, "encoded-secret", serviceName);
 		String mockToken = "mock.jwt.token";
 		long expiresInMs = 60000L;
 
 		when(serviceAccountService.authenticate(clientId, clientSecret)).thenReturn(mockAccount);
-		when(jwtTokenProvider.createInternalToken(serviceName)).thenReturn(mockToken);
+		when(jwtTokenProvider.createInternalToken(serviceName,userId)).thenReturn(mockToken);
 		when(jwtTokenProvider.getInternalTokenValidityMs()).thenReturn(expiresInMs);
 
 		// when
-		Map<String, Object> tokenResponse = oAuth2TokenService.issueTokenForClientCredentials(authHeader);
+		Map<String, Object> tokenResponse = oAuth2TokenService.issueTokenForClientCredentials(authHeader,userId);
 
 		// then
 		assertThat(tokenResponse).isNotNull();
@@ -60,7 +61,7 @@ class OAuth2TokenServiceTest {
 	@DisplayName("Authorization 헤더가 없으면 IllegalArgumentException이 발생해야 한다")
 	void issueToken_WithMissingHeader_ShouldThrowException() {
 		// then
-		assertThatThrownBy(() -> oAuth2TokenService.issueTokenForClientCredentials(null))
+		assertThatThrownBy(() -> oAuth2TokenService.issueTokenForClientCredentials(null,null))
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("Missing or invalid Basic authorization header");
 	}
@@ -70,9 +71,10 @@ class OAuth2TokenServiceTest {
 	void issueToken_WithInvalidHeaderFormat_ShouldThrowException() {
 		// given
 		String authHeader = "Bearer some-token";
+		String userId="2L";
 
 		// then
-		assertThatThrownBy(() -> oAuth2TokenService.issueTokenForClientCredentials(authHeader))
+		assertThatThrownBy(() -> oAuth2TokenService.issueTokenForClientCredentials(authHeader,userId))
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("Missing or invalid Basic authorization header");
 	}
@@ -85,12 +87,13 @@ class OAuth2TokenServiceTest {
 		String clientSecret = "wrong-secret";
 		String credentials = Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes());
 		String authHeader = "Basic " + credentials;
+		String userId="2L";
 
 		when(serviceAccountService.authenticate(clientId, clientSecret))
 			.thenThrow(new IllegalArgumentException("Invalid credentials"));
 
 		// then
-		assertThatThrownBy(() -> oAuth2TokenService.issueTokenForClientCredentials(authHeader))
+		assertThatThrownBy(() -> oAuth2TokenService.issueTokenForClientCredentials(authHeader,userId))
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("Invalid credentials");
 	}
