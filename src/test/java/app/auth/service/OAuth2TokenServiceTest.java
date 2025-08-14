@@ -1,6 +1,5 @@
 package app.auth.service;
 
-import app.auth.model.entity.ServiceAccount;
 import app.global.jwt.JwtTokenProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,9 +22,6 @@ class OAuth2TokenServiceTest {
 	private OAuth2TokenService oAuth2TokenService;
 
 	@Mock
-	private ServiceAccountService serviceAccountService;
-
-	@Mock
 	private JwtTokenProvider jwtTokenProvider;
 
 	@Test
@@ -39,11 +35,10 @@ class OAuth2TokenServiceTest {
 		String authHeader = "Basic " + credentials;
 		String userId="2L";
 
-		ServiceAccount mockAccount = new ServiceAccount(clientId, "encoded-secret", serviceName);
 		String mockToken = "mock.jwt.token";
 		long expiresInMs = 60000L;
 
-		when(serviceAccountService.authenticate(clientId, clientSecret)).thenReturn(mockAccount);
+
 		when(jwtTokenProvider.createInternalToken(serviceName,userId)).thenReturn(mockToken);
 		when(jwtTokenProvider.getInternalTokenValidityMs()).thenReturn(expiresInMs);
 
@@ -79,22 +74,4 @@ class OAuth2TokenServiceTest {
 			.hasMessage("Missing or invalid Basic authorization header");
 	}
 
-	@Test
-	@DisplayName("자격 증명 인증 실패 시 ServiceAccountService의 예외가 그대로 전파되어야 한다")
-	void issueToken_WhenAuthenticationFails_ShouldPropagateException() {
-		// given
-		String clientId = "wrong-id";
-		String clientSecret = "wrong-secret";
-		String credentials = Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes());
-		String authHeader = "Basic " + credentials;
-		String userId="2L";
-
-		when(serviceAccountService.authenticate(clientId, clientSecret))
-			.thenThrow(new IllegalArgumentException("Invalid credentials"));
-
-		// then
-		assertThatThrownBy(() -> oAuth2TokenService.issueTokenForClientCredentials(authHeader,userId))
-			.isInstanceOf(IllegalArgumentException.class)
-			.hasMessage("Invalid credentials");
-	}
 }

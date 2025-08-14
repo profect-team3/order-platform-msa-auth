@@ -54,11 +54,11 @@ public class JwtTokenProvider {
 			.issuedAt(Date.from(now))
 			.expiration(Date.from(validity))
 			.header().keyId(kid).and()
-			.signWith(privateKey, Jwts.SIG.RS256) // JJWT 0.12 API
+			.signWith(privateKey, Jwts.SIG.RS256)
 			.compact();
 	}
 
-	public String createInternalToken(String serviceName,String userId) {
+	public String createInternalToken(String userId,String userRole) {
 		Instant now = Instant.now();
 		Instant validity = now.plusMillis(internalTokenValidityMs);
 
@@ -70,9 +70,9 @@ public class JwtTokenProvider {
 		String kid = activeKey.kid();
 
 		return Jwts.builder()
-			.subject(serviceName)
 			.claim("aud", "internal-services")
 			.claim("user_id", userId)
+			.claim("user_role", userRole)
 			.issuedAt(Date.from(now))
 			.expiration(Date.from(validity))
 			.header().keyId(kid).and()
@@ -94,11 +94,11 @@ public class JwtTokenProvider {
 
 		return Jwts.builder()
 			.subject(userId)
-			.claim("roles", roles)  // 여기서 바로 claim 추가
+			.claim("roles", roles)
 			.issuedAt(Date.from(now))
 			.expiration(Date.from(validity))
 			.header().keyId(kid).and()
-			.signWith(privateKey, Jwts.SIG.RS256) // JJWT 0.12 API
+			.signWith(privateKey, Jwts.SIG.RS256)
 			.compact();
 	}
 
