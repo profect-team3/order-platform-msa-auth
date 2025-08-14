@@ -22,7 +22,6 @@ public class OAuth2TokenController {
 		produces = MediaType.APPLICATION_JSON_VALUE
 	)
 	public ResponseEntity<Map<String, Object>> issueToken(
-		@RequestHeader("Authorization") String authorizationHeader,
 		@RequestParam MultiValueMap<String, String> parameters) {
 
 		String grantType = parameters.getFirst("grant_type");
@@ -32,9 +31,9 @@ public class OAuth2TokenController {
 
 
 		String userId = parameters.getFirst("user_id");
-
+		String userRole = parameters.getFirst("user_role");
 		Map<String, Object> tokenResponse =
-			oauth2TokenService.issueTokenForClientCredentials(authorizationHeader, userId);
+			oauth2TokenService.issueTokenForClientCredentials(userId,userRole);
 
 		return ResponseEntity.ok(tokenResponse);
 	}
