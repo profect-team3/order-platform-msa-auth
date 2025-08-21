@@ -36,9 +36,6 @@ public class JwtTokenProvider {
 	@Value("${jwt.internal-token-validity-in-milliseconds}")
 	private long internalTokenValidityMs;
 
-	public String createAccessToken(String userId, List<String> roles) {
-		return createToken(userId, roles, accessTokenValidityMs);
-	}
 	public String createRefreshToken() {
 		Instant now = Instant.now();
 		Instant validity = now.plusMillis(refreshTokenValidityMs);
@@ -58,32 +55,10 @@ public class JwtTokenProvider {
 			.compact();
 	}
 
-	public String createInternalToken(String userId,String userRole) {
+
+	public String createAccessToken(String userId, List<String> roles) {
 		Instant now = Instant.now();
-		Instant validity = now.plusMillis(internalTokenValidityMs);
-
-		KeyEntry activeKey = jwtKeyManager.getActiveKey();
-		if (activeKey == null) {
-			throw new IllegalStateException("No active signing key is available.");
-		}
-		PrivateKey privateKey = activeKey.keyPair().getPrivate();
-		String kid = activeKey.kid();
-
-		return Jwts.builder()
-			.claim("aud", "internal-services")
-			.claim("user_id", userId)
-			.claim("user_role", userRole)
-			.issuedAt(Date.from(now))
-			.expiration(Date.from(validity))
-			.header().keyId(kid).and()
-			.signWith(privateKey, Jwts.SIG.RS256)
-			.compact();
-	}
-
-
-	private String createToken(String userId, List<String> roles, long validityMs) {
-		Instant now = Instant.now();
-		Instant validity = now.plusMillis(validityMs);
+		Instant validity = now.plusMillis(accessTokenValidityMs);
 
 		KeyEntry activeKey = jwtKeyManager.getActiveKey();
 		if (activeKey == null) {
