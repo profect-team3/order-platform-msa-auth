@@ -1,10 +1,10 @@
 FROM gradle:8.8-jdk17 AS builder
 WORKDIR /workspace
 
-COPY gradlew gradlew.bat settings.gradle build.cloud.gradle ./
+COPY gradlew gradlew.bat settings.gradle ./
 COPY gradle ./gradle
-
 COPY order-platform-msa-auth ./order-platform-msa-auth
+COPY order-platform-msa-auth/build.cloud.gradle ./order-platform-msa-auth/build.gradle
 
 RUN ./gradlew :order-platform-msa-auth:build -x test
 
