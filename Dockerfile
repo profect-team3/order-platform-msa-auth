@@ -14,4 +14,5 @@ WORKDIR /app
 COPY --from=builder /workspace/order-platform-msa-auth/build/libs/*.jar /app/application.jar
 
 EXPOSE 8083
-ENTRYPOINT ["java", "-jar", "/app/application.jar"]
+ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "/app/application.jar"]
+
