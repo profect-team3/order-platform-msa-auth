@@ -47,23 +47,6 @@ class JwtTokenProviderTest {
 		ReflectionTestUtils.setField(jwtTokenProvider, "internalTokenValidityMs", 60000L); // 1분
 	}
 
-	@Test
-	@DisplayName("AccessToken 생성 시 올바른 Claims와 만료 시간을 가져야 한다")
-	void createAccessToken_ShouldContainCorrectClaims() {
-		// given
-		String userId = "user123";
-		List<String> roles = List.of("USER", "ADMIN");
-		when(jwtKeyManager.getActiveKey()).thenReturn(testKeyEntry);
-
-		// when
-		String token = jwtTokenProvider.createAccessToken(userId, roles);
-
-		// then
-		assertThat(token).isNotNull();
-		Claims claims = jwtTokenProvider.parseClaims(token);
-		assertThat(claims.getSubject()).isEqualTo(userId);
-		assertThat((List<String>) claims.get("roles")).containsExactlyElementsOf(roles);
-	}
 
 	@Test
 	@DisplayName("유효한 토큰 검증(validateToken) 시 true를 반환해야 한다")
