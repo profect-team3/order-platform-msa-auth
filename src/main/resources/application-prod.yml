@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+
+jwt:
+  issuer: ${JWT_ISSUER}
+  access-validity-seconds: 900
+
+kms:
+  jwt:
+    key-id: ${KMS_JWT_KEY_ID}
