@@ -1,7 +1,5 @@
 package app.global.config;
 
-// app/global/config/JwtSignerConfig.java
-
 
 import app.global.jwt.KmsRsaSigner;
 import com.nimbusds.jose.JWSSigner;
