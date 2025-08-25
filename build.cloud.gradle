@@ -1,0 +1,65 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.4'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'goorm.delivery'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(17) }
+}
+
+ext {
+    querydslVersion = '5.0.0'
+}
+
+configurations {
+    compileOnly { extendsFrom annotationProcessor }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "software.amazon.awssdk:bom:2.25.66"
+    }
+}
+
+dependencies {
+    // Spring
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+    // DB
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // OpenAPI
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+
+    // JWT (Nimbus 계열 사용 – KMS 연동하기 편함)
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.37'
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly   'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly   'io.jsonwebtoken:jjwt-jackson:0.12.6'
+    // AWS KMS (BOM에 의해 버전 관리됨)
+    implementation 'software.amazon.awssdk:kms'
+
+    // Jackson (필요 시)
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') { useJUnitPlatform() }
