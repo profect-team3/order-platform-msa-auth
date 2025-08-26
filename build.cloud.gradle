@@ -1,23 +1,7 @@
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        mavenCentral()
-    }
-}
-
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.4'
     id 'io.spring.dependency-management' version '1.1.7'
-}
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        mavenCentral()
-        maven { url 'https://repo.spring.io/milestone' }
-        maven { url 'https://repo.spring.io/snapshot' }
-        flatDir { dirs 'libs' }
-    }
 }
 
 
@@ -50,7 +34,11 @@ dependencies {
     // db
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    runtimeOnly 'org.postgresql:postgresql'
+        // DB
+    runtimeOnly   "org.postgresql:postgresql"
+
+    // Security / OAuth2
+    implementation files("libs/msa-common-security-1.0.8-plain.jar")
 
     // security
     implementation 'org.springframework.boot:spring-boot-starter-security'

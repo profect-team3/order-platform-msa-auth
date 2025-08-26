@@ -9,6 +9,7 @@ COPY gradle ./gradle
 COPY build.cloud.gradle build.gradle
 
 COPY src ./src
+COPY libs ./libs
 
 RUN ./gradlew build
 
