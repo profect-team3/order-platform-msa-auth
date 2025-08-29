@@ -11,12 +11,8 @@ import software.amazon.awssdk.services.kms.model.*;
 import java.security.MessageDigest;
 import java.util.Collections;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
-@Profile("prod")
 public class KmsRsaSigner extends BaseJWSProvider implements JWSSigner {
 
 	private final KmsClient kms;
