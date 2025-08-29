@@ -2,7 +2,9 @@ name: ECR Push - auth
 
 on:
   push:
-    branches: ["stage"]
+    branches: ["stage", "dev"]
+  pull_request:
+    branches: ["stage", "dev"]
 
 jobs:
   build-and-push:
