@@ -17,6 +17,7 @@ import app.auth.model.entity.User;
 import app.auth.status.UserErrorStatus;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
+import app.global.jwt.AccessTokenProvider;
 import app.global.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ public class AuthService {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RedisTemplate<String, String> redisTemplate;
 	private static final String REFRESH_TOKEN_PREFIX = "RT:";
+	private final AccessTokenProvider accessTokenProvider;
 
 	@Transactional
 	public LoginResponse login(LoginRequest request) {
@@ -44,7 +46,7 @@ public class AuthService {
 
 		List<String> roles = List.of(user.getUserRole().name());
 
-		String accessToken = jwtTokenProvider.createAccessToken(user.getUserId().toString(), roles);
+		String accessToken = accessTokenProvider.creatAccessToken(user.getUserId().toString(), roles);
 		String refreshToken = jwtTokenProvider.createRefreshToken();
 
 		redisTemplate.opsForValue().set(

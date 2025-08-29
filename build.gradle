@@ -23,6 +23,11 @@ configurations {
         extendsFrom annotationProcessor
     }
 }
+dependencyManagement {
+    imports {
+        mavenBom "software.amazon.awssdk:bom:2.25.66"
+    }
+}
 
 dependencies {
     // core
@@ -58,6 +63,10 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+    //key manager service
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.37'
+    implementation 'software.amazon.awssdk:kms'
 }
 
 clean {
