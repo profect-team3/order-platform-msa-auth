@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Auth", description = "로그인, 로그아웃")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("")
+@RequestMapping("/auth")
 public class AuthController {
 
 	private final AuthService authService;

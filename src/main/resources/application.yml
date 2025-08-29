@@ -30,6 +30,11 @@ jwt:
   access-token-validity-in-milliseconds: 300000 # 5 minutes
   refresh-token-validity-in-milliseconds: 604800000 # 7 days
   internal-token-validity-in-milliseconds: 600000 # 1 minute
-
+  issuer: ${JWT_ISSUER}
+  access-validity-seconds: 900
 server:
   port: 8083
+
+kms:
+  jwt:
+    key-id: ${KMS_JWT_KEY_ID}        # 예: arn:aws:kms:ap-northeast-2:111111111111:key/xxxx or alias/jwt-internal
