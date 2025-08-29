@@ -29,6 +29,9 @@ class JwtTokenProviderTest {
 	@InjectMocks
 	private JwtTokenProvider jwtTokenProvider;
 
+	@InjectMocks
+	private LocalTokenProvider localTokenProvider;
+
 	@Mock
 	private JwtKeyManager jwtKeyManager;
 
@@ -42,11 +45,31 @@ class JwtTokenProviderTest {
 		KeyPair keyPair = keyPairGenerator.generateKeyPair();
 		testKeyEntry = new KeyEntry(testKid, keyPair);
 
-		ReflectionTestUtils.setField(jwtTokenProvider, "accessTokenValidityMs", 3600000L); // 1시간
+		ReflectionTestUtils.setField(localTokenProvider, "accessTokenValidityMs", 3600000L); // 1시간
 		ReflectionTestUtils.setField(jwtTokenProvider, "refreshTokenValidityMs", 86400000L); // 24시간
 		ReflectionTestUtils.setField(jwtTokenProvider, "internalTokenValidityMs", 60000L); // 1분
+
+		when(jwtKeyManager.getActiveKey()).thenReturn(testKeyEntry);                // 발급 때 사용
+		when(jwtKeyManager.getKeyById(testKid)).thenReturn(Optional.of(testKeyEntry));
 	}
 
+	@Test
+	@DisplayName("AccessToken 생성 시 올바른 Claims와 만료 시간을 가져야 한다")
+	void createAccessToken_ShouldContainCorrectClaims() {
+		// given
+		String userId = "user123";
+		List<String> roles = List.of("USER", "ADMIN");
+		when(jwtKeyManager.getActiveKey()).thenReturn(testKeyEntry);
+
+		// when
+		String token =localTokenProvider.creatAccessToken(userId, roles);
+
+		// then
+		assertThat(token).isNotNull();
+		Claims claims = jwtTokenProvider.parseClaims(token);
+		assertThat(claims.getSubject()).isEqualTo(userId);
+		assertThat((List<String>) claims.get("roles")).containsExactlyElementsOf(roles);
+	}
 
 	@Test
 	@DisplayName("유효한 토큰 검증(validateToken) 시 true를 반환해야 한다")
@@ -54,7 +77,7 @@ class JwtTokenProviderTest {
 		// given
 		when(jwtKeyManager.getActiveKey()).thenReturn(testKeyEntry);
 		when(jwtKeyManager.getKeyById(testKid)).thenReturn(Optional.of(testKeyEntry));
-		String token = jwtTokenProvider.createAccessToken("user123", List.of("USER"));
+		String token = localTokenProvider.creatAccessToken("user123", List.of("USER"));
 
 		// when
 		boolean isValid = jwtTokenProvider.validateToken(token);
@@ -68,7 +91,7 @@ class JwtTokenProviderTest {
 	void validateToken_WithInvalidSignature_ShouldReturnFalse() throws NoSuchAlgorithmException {
 		// given
 		when(jwtKeyManager.getActiveKey()).thenReturn(testKeyEntry);
-		String token = jwtTokenProvider.createAccessToken("user123", List.of("USER"));
+		String token = localTokenProvider.creatAccessToken("user123", List.of("USER"));
 
 		KeyPair otherKeyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
 		KeyEntry otherKeyEntry = new KeyEntry("other-kid", otherKeyPair);
@@ -88,7 +111,7 @@ class JwtTokenProviderTest {
 	void validateToken_WithUnknownKid_ShouldReturnFalse() {
 		// given
 		when(jwtKeyManager.getActiveKey()).thenReturn(testKeyEntry);
-		String token = jwtTokenProvider.createAccessToken("user123", List.of("USER"));
+		String token = localTokenProvider.creatAccessToken("user123", List.of("USER"));
 
 		when(jwtKeyManager.getKeyById(testKid)).thenReturn(Optional.empty());
 

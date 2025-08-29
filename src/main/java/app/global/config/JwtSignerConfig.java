@@ -1,15 +1,17 @@
 package app.global.config;
 
-
 import app.global.jwt.KmsRsaSigner;
 import com.nimbusds.jose.JWSSigner;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
 import software.amazon.awssdk.services.kms.KmsClient;
 import software.amazon.awssdk.services.kms.model.SigningAlgorithmSpec;
 
 @Configuration
+@Profile("prod")
 public class JwtSignerConfig {
 
 	@Value("${kms.jwt.key-id}")

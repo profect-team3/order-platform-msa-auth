@@ -1,9 +1,10 @@
-// app/global/config/JwtBeans.java
 package app.global.jwt;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kms.KmsClient;
@@ -12,13 +13,15 @@ import software.amazon.awssdk.services.kms.KmsClientBuilder;
 import java.net.URI;
 
 @Configuration
+@Profile("prod")
 public class JwtBeans {
 
 	@Value("${aws.region:}")
-	private String awsRegion; // application.yml 에서 주입 (미지정이면 빈 문자열)
+	private String awsRegion;
 
 	@Value("${aws.kms.endpoint:}")
 	private String kmsEndpoint;
+
 
 	@Bean
 	public KmsClient kmsClient() {

@@ -27,9 +27,6 @@ public class JwtTokenProvider {
 
 	private final JwtKeyManager jwtKeyManager;
 
-	@Value("${jwt.access-token-validity-in-milliseconds}")
-	private long accessTokenValidityMs;
-
 	@Value("${jwt.refresh-token-validity-in-milliseconds}")
 	private long refreshTokenValidityMs;
 
@@ -55,10 +52,9 @@ public class JwtTokenProvider {
 			.compact();
 	}
 
-
-	public String createAccessToken(String userId, List<String> roles) {
+	public String createInternalToken(String userId,String userRole) {
 		Instant now = Instant.now();
-		Instant validity = now.plusMillis(accessTokenValidityMs);
+		Instant validity = now.plusMillis(internalTokenValidityMs);
 
 		KeyEntry activeKey = jwtKeyManager.getActiveKey();
 		if (activeKey == null) {
@@ -68,14 +64,18 @@ public class JwtTokenProvider {
 		String kid = activeKey.kid();
 
 		return Jwts.builder()
-			.subject(userId)
-			.claim("roles", roles)
+			.claim("aud", "internal-services")
+			.claim("user_id", userId)
+			.claim("user_role", userRole)
 			.issuedAt(Date.from(now))
 			.expiration(Date.from(validity))
 			.header().keyId(kid).and()
 			.signWith(privateKey, Jwts.SIG.RS256)
 			.compact();
 	}
+
+
+
 
 	public Claims parseClaims(String token) {
 		return Jwts.parser()
@@ -123,4 +123,6 @@ public class JwtTokenProvider {
 	public long getRefreshTokenValidityMs() {
 		return refreshTokenValidityMs;
 	}
+
+
 }
