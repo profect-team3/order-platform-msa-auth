@@ -11,7 +11,7 @@ COPY settings.gradle .
 
 COPY src ./src
 
-RUN ./gradlew build
+RUN ./gradlew bootJar
 
 FROM eclipse-temurin:17-jre-jammy
 
