@@ -13,6 +13,13 @@ public class OAuth2TokenService {
 	private final JwtTokenProvider jwtTokenProvider;
 
 	public Map<String, Object> issueTokenForClientCredentials(String userId,String userRole) {
+		if (userId == null || userId.isBlank()) {
+			throw new IllegalArgumentException("Missing required parameter: userId");
+		}
+		if (userRole == null || userRole.isBlank()) {
+			throw new IllegalArgumentException("Missing required parameter: userRole");
+		}
+
 
 		String accessToken = jwtTokenProvider.createInternalToken(userId,userRole);
 		long expiresIn = jwtTokenProvider.getInternalTokenValidityMs() / 1000;
