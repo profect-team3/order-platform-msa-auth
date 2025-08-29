@@ -15,6 +15,11 @@ docker run --name auth \
     -e DB_PASSWORD=password \
     -e OAUTH_JWKS_URI=http://host.docker.internal:8083/oauth/jwks \
     -e AUTH_INTERNAL_AUDIENCE=internal-services \
+    -e KMS_JWT_KEY_ID=arn:aws:kms:ap-northeast-2:252098843029:key/c45bc708-8728-4926-b41f-79eedc115405 \
+    -e JWT_ISSUER=https://auth.internal.example.com \
+    -e REDIS_HOST=localhost \
+    -e REDIS_PORT=6379 \
+    -e REDIS_PASSWORD=password \
     -d order-platform-msa-auth
 
 
