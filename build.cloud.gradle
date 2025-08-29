@@ -30,7 +30,7 @@ dependencyManagement {
 }
 
 dependencies {
-    // core
+    // Spring
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -50,11 +50,23 @@ dependencies {
     // docs
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
-    // lombok
+    // JWT (Nimbus 계열 사용 – KMS 연동하기 편함)
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.37'
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly   'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly   'io.jsonwebtoken:jjwt-jackson:0.12.6'
+    // AWS KMS (BOM에 의해 버전 관리됨)
+    implementation 'software.amazon.awssdk:kms'
+
+    // Jackson (필요 시)
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    // test
+    // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -63,7 +75,8 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
-
+    //Health Check
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
     //key manager service
     implementation 'com.nimbusds:nimbus-jose-jwt:9.37'
     implementation 'software.amazon.awssdk:kms'

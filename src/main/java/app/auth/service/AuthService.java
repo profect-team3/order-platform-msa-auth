@@ -46,7 +46,7 @@ public class AuthService {
 
 		List<String> roles = List.of(user.getUserRole().name());
 
-		String accessToken = accessTokenProvider.createAccessToken(user.getUserId().toString(), roles);
+		String accessToken = accessTokenProvider.creatAccessToken(user.getUserId().toString(), roles);
 		String refreshToken = jwtTokenProvider.createRefreshToken();
 
 		redisTemplate.opsForValue().set(
