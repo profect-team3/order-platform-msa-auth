@@ -21,7 +21,7 @@ public class KmsTokenProvider implements AccessTokenProvider{
 	@Value("${jwt.access-validity-seconds}") private long validitySec;
 	@Value("${kms.jwt.key-id}") private String kid;
 
-	public String creatAccessToken(String userId, List<String> roles) {
+	public String createAccessToken(String userId, List<String> roles) {
 		Instant now = Instant.now();
 		Instant exp = now.plusSeconds(validitySec);
 

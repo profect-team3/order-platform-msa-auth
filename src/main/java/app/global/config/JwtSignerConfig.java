@@ -20,7 +20,7 @@ public class JwtSignerConfig {
 	@Value("${kms.jwt.signing-alg:RSASSA_PKCS1_V1_5_SHA_256}")
 	private String signingAlg;
 
-	@Bean
+	@Bean(name = "kmsRsaSigner")
 	public JWSSigner jwsSigner(KmsClient kmsClient) {
 		SigningAlgorithmSpec alg = SigningAlgorithmSpec.fromValue(signingAlg);
 		return new KmsRsaSigner(kmsClient, kmsKeyId, alg);

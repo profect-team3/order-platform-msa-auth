@@ -24,7 +24,7 @@ public class LocalTokenProvider implements AccessTokenProvider{
 	@Value("${jwt.access-token-validity-in-milliseconds}")
 	private long accessTokenValidityMs;
 	@Override
-	public String creatAccessToken(String userId, List<String> roles) {
+	public String createAccessToken(String userId, List<String> roles) {
 		Instant now = Instant.now();
 		Instant validity = now.plusMillis(accessTokenValidityMs);
 

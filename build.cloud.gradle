@@ -4,11 +4,14 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
+
 group = 'goorm.delivery'
 version = '0.0.1-SNAPSHOT'
 
 java {
-    toolchain { languageVersion = JavaLanguageVersion.of(17) }
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 ext {
@@ -16,9 +19,10 @@ ext {
 }
 
 configurations {
-    compileOnly { extendsFrom annotationProcessor }
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
-
 dependencyManagement {
     imports {
         mavenBom "software.amazon.awssdk:bom:2.25.66"
@@ -28,16 +32,22 @@ dependencyManagement {
 dependencies {
     // Spring
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // db
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    runtimeOnly   "org.postgresql:postgresql"
 
-    // DB
-    runtimeOnly 'org.postgresql:postgresql'
+    // Security / OAuth2
+    implementation files("libs/msa-common-security-1.0.8-plain.jar")
 
-    // OpenAPI
+    // security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
+
+    // docs
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
     // JWT (Nimbus 계열 사용 – KMS 연동하기 편함)
@@ -61,8 +71,22 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    // jwt
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     //Health Check
     implementation "org.springframework.boot:spring-boot-starter-actuator"
+    //key manager service
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.37'
+    implementation 'software.amazon.awssdk:kms'
 }
 
-tasks.named('test') { useJUnitPlatform() }
+clean {
+    delete file('src/main/generated')
+}
+
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
