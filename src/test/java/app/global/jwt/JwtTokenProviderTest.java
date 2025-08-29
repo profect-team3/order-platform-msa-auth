@@ -62,7 +62,7 @@ class JwtTokenProviderTest {
 		when(jwtKeyManager.getActiveKey()).thenReturn(testKeyEntry);
 
 		// when
-		String token =localTokenProvider.creatAccessToken(userId, roles);
+		String token =localTokenProvider.createAccessToken(userId, roles);
 
 		// then
 		assertThat(token).isNotNull();
@@ -77,7 +77,7 @@ class JwtTokenProviderTest {
 		// given
 		when(jwtKeyManager.getActiveKey()).thenReturn(testKeyEntry);
 		when(jwtKeyManager.getKeyById(testKid)).thenReturn(Optional.of(testKeyEntry));
-		String token = localTokenProvider.creatAccessToken("user123", List.of("USER"));
+		String token = localTokenProvider.createAccessToken("user123", List.of("USER"));
 
 		// when
 		boolean isValid = jwtTokenProvider.validateToken(token);
@@ -91,7 +91,7 @@ class JwtTokenProviderTest {
 	void validateToken_WithInvalidSignature_ShouldReturnFalse() throws NoSuchAlgorithmException {
 		// given
 		when(jwtKeyManager.getActiveKey()).thenReturn(testKeyEntry);
-		String token = localTokenProvider.creatAccessToken("user123", List.of("USER"));
+		String token = localTokenProvider.createAccessToken("user123", List.of("USER"));
 
 		KeyPair otherKeyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
 		KeyEntry otherKeyEntry = new KeyEntry("other-kid", otherKeyPair);
@@ -111,7 +111,7 @@ class JwtTokenProviderTest {
 	void validateToken_WithUnknownKid_ShouldReturnFalse() {
 		// given
 		when(jwtKeyManager.getActiveKey()).thenReturn(testKeyEntry);
-		String token = localTokenProvider.creatAccessToken("user123", List.of("USER"));
+		String token = localTokenProvider.createAccessToken("user123", List.of("USER"));
 
 		when(jwtKeyManager.getKeyById(testKid)).thenReturn(Optional.empty());
 
