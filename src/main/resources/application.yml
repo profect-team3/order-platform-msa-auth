@@ -37,4 +37,4 @@ server:
 
 kms:
   jwt:
-    key-id: ${KMS_JWT_KEY_ID}        # 예: arn:aws:kms:ap-northeast-2:111111111111:key/xxxx or alias/jwt-internal
+    key-id: ${KMS_JWT_KEY_ID}

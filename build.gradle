@@ -13,11 +13,6 @@ java {
     }
 }
 
-ext {
-    querydslVersion = '5.0.0'
-}
-
-
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
@@ -34,6 +29,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation files('libs/msa-common-util-1.0.2-plain.jar')
 
     // db
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -42,9 +38,14 @@ dependencies {
 
     // security
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.37'
+    implementation 'software.amazon.awssdk:kms'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
     // cloud
-    implementation platform("org.springframework.cloud:spring-cloud-dependencies:${rootProject.ext.springCloudVersion}")
+    implementation platform("org.springframework.cloud:spring-cloud-dependencies:2025.0.0")
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 
     // docs
@@ -58,15 +59,6 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    // jwt
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
-
-    //key manager service
-    implementation 'com.nimbusds:nimbus-jose-jwt:9.37'
-    implementation 'software.amazon.awssdk:kms'
 }
 
 clean {
