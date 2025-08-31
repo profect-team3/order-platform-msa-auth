@@ -38,6 +38,7 @@ dependencies {
 
     // security
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     implementation 'com.nimbusds:nimbus-jose-jwt:9.37'
     implementation 'software.amazon.awssdk:kms'
