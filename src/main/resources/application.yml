@@ -1,4 +1,6 @@
 spring:
+  main:
+    lazy-initialization: true
   application:
     name: auth
   config:
@@ -37,4 +39,6 @@ server:
 
 kms:
   jwt:
+    enabled: false
     key-id: ${KMS_JWT_KEY_ID}
+    region: ${AWS_REGION:ap-northeast-2}
