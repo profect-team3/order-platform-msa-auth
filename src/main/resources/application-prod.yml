@@ -3,14 +3,19 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
 
   data:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
+      database: 0
 
 jwt:
+  access-token-validity-in-milliseconds: 300000 # 5 minutes
+  refresh-token-validity-in-milliseconds: 604800000 # 7 days
+  internal-token-validity-in-milliseconds: 600000 # 1 minute
   issuer: ${JWT_ISSUER}
   access-validity-seconds: 900
 
