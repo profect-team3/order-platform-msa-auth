@@ -5,11 +5,7 @@ spring:
     name: auth
   config:
     import: optional:file:.env[.properties]
-  datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/order_platform}
-    username: ${DB_USERNAME:bonun}
-    password: ${DB_PASSWORD:password}
-    driver-class-name: org.postgresql.Driver
+
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -21,24 +17,8 @@ spring:
         show_sql: true
         use_sql_comments: true
 
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:password}
-      database: 0
 
-jwt:
-  access-token-validity-in-milliseconds: 300000 # 5 minutes
-  refresh-token-validity-in-milliseconds: 604800000 # 7 days
-  internal-token-validity-in-milliseconds: 600000 # 1 minute
-  issuer: ${JWT_ISSUER:https://auth.internal.example.com}
-  access-validity-seconds: 900
 server:
   port: 8083
 
-kms:
-  jwt:
-    enabled: false
-    key-id: ${KMS_JWT_KEY_ID:arn:aws:kms:ap-northeast-2:252098843029:key/c45bc708-8728-4926-b41f-79eedc115405}
-    region: ${AWS_REGION:ap-northeast-2}
+
