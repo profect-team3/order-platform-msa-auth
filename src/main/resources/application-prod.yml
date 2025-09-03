@@ -22,3 +22,4 @@ jwt:
 kms:
   jwt:
     key-id: ${KMS_JWT_KEY_ID}
+    region: ${AWS_REGION}

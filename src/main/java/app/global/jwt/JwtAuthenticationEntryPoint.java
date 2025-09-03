@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import app.global.apiPayload.ApiResponse;
-import app.global.apiPayload.code.status.ErrorStatus;
+import app.commonUtil.apiPayload.ApiResponse;
+import app.commonUtil.apiPayload.code.status.ErrorStatus;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

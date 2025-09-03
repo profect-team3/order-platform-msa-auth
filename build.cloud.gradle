@@ -4,7 +4,6 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
-
 group = 'goorm.delivery'
 version = '0.0.1-SNAPSHOT'
 
@@ -14,15 +13,12 @@ java {
     }
 }
 
-ext {
-    querydslVersion = '5.0.0'
-}
-
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
 }
+
 dependencyManagement {
     imports {
         mavenBom "software.amazon.awssdk:bom:2.25.66"
@@ -30,62 +26,48 @@ dependencyManagement {
 }
 
 dependencies {
-    // Spring
+    // core
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation files('libs/msa-common-util-1.0.2-plain.jar')
 
     // db
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     runtimeOnly   "org.postgresql:postgresql"
 
-    // Security / OAuth2
-    implementation files("libs/msa-common-security-1.0.8-plain.jar")
-
     // security
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.37'
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly   'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly   'io.jsonwebtoken:jjwt-jackson:0.12.6'
+    implementation 'software.amazon.awssdk:kms'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.37'
+    implementation 'software.amazon.awssdk:kms'
 
     // docs
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
-    // JWT (Nimbus 계열 사용 – KMS 연동하기 편함)
-    implementation 'com.nimbusds:nimbus-jose-jwt:9.37'
-
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    runtimeOnly   'io.jsonwebtoken:jjwt-impl:0.12.6'
-    runtimeOnly   'io.jsonwebtoken:jjwt-jackson:0.12.6'
-    // AWS KMS (BOM에 의해 버전 관리됨)
-    implementation 'software.amazon.awssdk:kms'
-
-    // Jackson (필요 시)
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-
-    // Lombok
+    // lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    // Test
+    // test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    // jwt
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
-    //Health Check
+    // health check
     implementation "org.springframework.boot:spring-boot-starter-actuator"
-    //key manager service
-    implementation 'com.nimbusds:nimbus-jose-jwt:9.37'
-    implementation 'software.amazon.awssdk:kms'
 }
 
 clean {
     delete file('src/main/generated')
 }
-
 
 tasks.named('test') {
     useJUnitPlatform()

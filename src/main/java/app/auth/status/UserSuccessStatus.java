@@ -2,8 +2,8 @@ package app.auth.status;
 
 import org.springframework.http.HttpStatus;
 
-import app.global.apiPayload.code.BaseCode;
-import app.global.apiPayload.code.ReasonDTO;
+import app.commonUtil.apiPayload.code.BaseCode;
+import app.commonUtil.apiPayload.code.ReasonDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

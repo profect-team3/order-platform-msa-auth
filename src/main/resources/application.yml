@@ -1,8 +1,11 @@
 spring:
+  main:
+    lazy-initialization: true
   application:
     name: auth
   config:
     import: optional:file:.env[.properties]
+
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -14,6 +17,8 @@ spring:
         show_sql: true
         use_sql_comments: true
 
+
 server:
   port: 8083
+
 
