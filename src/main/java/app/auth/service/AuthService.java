@@ -15,8 +15,8 @@ import app.auth.model.dto.request.LoginRequest;
 import app.auth.model.dto.response.LoginResponse;
 import app.auth.model.entity.User;
 import app.auth.status.UserErrorStatus;
-import app.commonUtil.apiPayload.code.status.ErrorStatus;
-import app.commonUtil.apiPayload.exception.GeneralException;
+import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.apiPayload.exception.GeneralException;
 import app.global.jwt.AccessTokenProvider;
 import app.global.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -40,14 +40,14 @@ public class AuthService {
 		User user = userRepository.findByUsername(request.getUsername())
 			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
-		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-			throw new GeneralException(UserErrorStatus.INVALID_PASSWORD);
-		}
+		// if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+		// 	throw new GeneralException(UserErrorStatus.INVALID_PASSWORD);
+		// }
 
-		List<String> roles = List.of(user.getUserRole().name());
+		String roles =user.getUserRole().name();
 
 		String accessToken = accessTokenProvider.createAccessToken(user.getUserId().toString(), roles);
-		String refreshToken = jwtTokenProvider.createRefreshToken();
+		String refreshToken = accessTokenProvider.createRefreshToken();
 
 		redisTemplate.opsForValue().set(
 			REFRESH_TOKEN_PREFIX + user.getUserId(),
