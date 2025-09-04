@@ -20,7 +20,7 @@ public class OAuth2TokenController {
 		@RequestParam MultiValueMap<String, String> parameters) {
 
 		String grantType = parameters.getFirst("grant_type");
-		String userId= parameters.getFirst("user_id");
+		String userId = parameters.getFirst("user_id");
 		String userRole = parameters.getFirst("user_role");
 
 
