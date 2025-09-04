@@ -40,9 +40,9 @@ public class AuthService {
 		User user = userRepository.findByUsername(request.getUsername())
 			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
-		// if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-		// 	throw new GeneralException(UserErrorStatus.INVALID_PASSWORD);
-		// }
+		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+			throw new GeneralException(UserErrorStatus.INVALID_PASSWORD);
+		}
 
 		String roles =user.getUserRole().name();
 
