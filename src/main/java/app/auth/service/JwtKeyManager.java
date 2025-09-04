@@ -170,7 +170,14 @@ public class JwtKeyManager {
     byte[] eBytes = stripLeadingZero(rsaPublicKey.getPublicExponent().toByteArray());
     String n = Base64.getUrlEncoder().withoutPadding().encodeToString(nBytes);
     String e = Base64.getUrlEncoder().withoutPadding().encodeToString(eBytes);
-    return Map.of("kty","RSA","kid",kid,"use","sig","alg","RS256","n",n,"e",e);
+    return Map.of(
+        "kty", "RSA",
+        "kid", kid,
+        "use", "sig",
+        "alg", "RS256",
+        "n", n,
+        "e", e
+    );
   }
 
   // === Local 전용 ===
