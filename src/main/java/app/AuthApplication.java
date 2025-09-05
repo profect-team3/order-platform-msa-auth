@@ -10,12 +10,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 @EnableRedisRepositories
-@ComponentScan(
-    excludeFilters = {
-      @ComponentScan.Filter(
-          type = FilterType.REGEX,
-          pattern = "app\\.commonUtil\\.security\\.config\\.SecurityConfig")
-    })
 public class AuthApplication {
 
   public static void main(String[] args) {

@@ -11,7 +11,6 @@ import software.amazon.awssdk.services.kms.model.*;
 import java.security.MessageDigest;
 import java.util.Collections;
 
-
 @Slf4j
 public class KmsRsaSigner extends BaseJWSProvider implements JWSSigner {
 

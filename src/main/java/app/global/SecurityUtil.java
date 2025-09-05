@@ -6,9 +6,8 @@ import org.springframework.stereotype.Component;
 
 import app.auth.model.repository.UserRepository;
 import app.auth.model.entity.User;
-
-import app.commonUtil.apiPayload.code.status.ErrorStatus;
-import app.commonUtil.apiPayload.exception.GeneralException;
+import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 
 @Component
