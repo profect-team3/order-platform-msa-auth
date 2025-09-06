@@ -45,19 +45,6 @@ public class SecurityConfig {
     return http.build();
   }
 
-  @Bean
-  @Order(2)
-  public SecurityFilterChain apiSecurityFilterChain(
-      HttpSecurity http, JwtDecoder decoder, JwtAuthenticationConverter jwtAuthConverter)
-      throws Exception {
-    http.authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
-        .oauth2ResourceServer(
-            oauth2 ->
-                oauth2.jwt(
-                    jwt -> jwt.decoder(decoder).jwtAuthenticationConverter(jwtAuthConverter)))
-        .csrf(AbstractHttpConfigurer::disable);
-    return http.build();
-  }
 
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {

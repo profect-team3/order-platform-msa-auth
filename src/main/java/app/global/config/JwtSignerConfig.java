@@ -21,7 +21,7 @@ public class JwtSignerConfig {
 	private String signingAlg;
 
 	@Bean(name = "kmsRsaSigner")
-	public JWSSigner jwsSigner(KmsClient kmsClient) {
+	public KmsRsaSigner jwsSigner(KmsClient kmsClient) {
 		SigningAlgorithmSpec alg = SigningAlgorithmSpec.fromValue(signingAlg);
 		return new KmsRsaSigner(kmsClient, kmsKeyId, alg);
 	}

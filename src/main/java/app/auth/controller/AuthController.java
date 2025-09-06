@@ -9,7 +9,7 @@ import app.auth.model.dto.request.LoginRequest;
 import app.auth.model.dto.response.LoginResponse;
 import app.auth.service.AuthService;
 import app.auth.status.UserSuccessStatus;
-import app.commonUtil.apiPayload.ApiResponse;
+import app.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

@@ -12,7 +12,6 @@ import io.jsonwebtoken.security.SignatureException;
 import java.security.PrivateKey;
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
