@@ -3,8 +3,6 @@ name: ECR Push - auth
 on:
   push:
     branches: ["stage", "dev"]
-  pull_request:
-    branches: ["stage", "dev"]
 
 jobs:
   build-and-push:
@@ -27,6 +25,6 @@ jobs:
 
       - name: Build & Push auth service
         run: |
-          docker build -f Dockerfile -t order-test-ecr-auth:latest .
-          docker tag order-test-ecr-auth:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/order-test-ecr-auth:latest
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/order-test-ecr-auth:latest
+          docker build -f Dockerfile -t order-auth:latest .
+          docker tag order-auth:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/order-auth:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/order-auth:latest
