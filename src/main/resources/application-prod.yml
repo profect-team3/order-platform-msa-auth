@@ -10,8 +10,7 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
       database: 0
-      ssl:
-        enabled: true
+      Ssl: true
 
 jwt:
   access-token-validity-in-milliseconds: 300000 # 5 minutes
