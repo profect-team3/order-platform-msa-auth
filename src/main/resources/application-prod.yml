@@ -10,6 +10,8 @@ spring:
       protocol : ${REDIS_PROTOCOL}
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
+      ssl:
+        enabled: true
       database: 0
 
 jwt:
