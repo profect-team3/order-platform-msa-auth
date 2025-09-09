@@ -7,10 +7,7 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      ssl:
-        enabled: true
+      url: ${REDIS_URL}
       database: 0
 
 jwt:
