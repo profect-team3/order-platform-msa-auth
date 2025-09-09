@@ -25,14 +25,23 @@ public class RedisConfig {
 	@Value("${REDIS_PASSWORD}")
 	private String redisPassword;
 
+	@Value("${REDIS_PROTOCOL}")
+	private String redisProtocol;
+
 	@Bean
 	public LettuceConnectionFactory redisConnectionFactory() {
 		RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
 		redisConfig.setHostName(redisHost);
 		redisConfig.setPort(redisPort);
 
-		LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
-			.useSsl().build();
+		LettuceClientConfiguration clientConfig;
+
+		if (redisPassword != null && !redisPassword.isBlank()) {
+			redisConfig.setPassword(redisPassword);
+			clientConfig = LettuceClientConfiguration.builder().build();
+		} else {
+			clientConfig = LettuceClientConfiguration.builder().useSsl().build();
+		}
 
 		return new LettuceConnectionFactory(redisConfig, clientConfig);
 	}
