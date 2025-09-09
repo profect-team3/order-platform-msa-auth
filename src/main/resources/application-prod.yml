@@ -9,7 +9,6 @@ spring:
     redis:
       url: ${REDIS_URL}
       port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD}
       database: 0
 
 jwt:
