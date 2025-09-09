@@ -16,14 +16,32 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 @Configuration
 public class RedisConfig {
 
+	@Value("${REDIS_HOST}")
+	private String redisHost;
+
+	@Value("${REDIS_PORT}")
+	private int redisPort;
+
+	@Value("${REDIS_PASSWORD}")
+	private String redisPassword;
+
+	@Value("${REDIS_PROTOCOL}")
+	private String redisProtocol;
+
 	@Bean
 	public LettuceConnectionFactory redisConnectionFactory() {
 		RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
-		redisConfig.setHostName("master.order-elasticache-redis.98c1fs.apn2.cache.amazonaws.com");
-		redisConfig.setPort(6380);
+		redisConfig.setHostName(redisHost);
+		redisConfig.setPort(redisPort);
 
-		LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
-			.useSsl().build();
+		LettuceClientConfiguration clientConfig;
+
+		if (redisPassword != null && !redisPassword.isBlank()) {
+			redisConfig.setPassword(redisPassword);
+			clientConfig = LettuceClientConfiguration.builder().build();
+		} else {
+			clientConfig = LettuceClientConfiguration.builder().useSsl().build();
+		}
 
 		return new LettuceConnectionFactory(redisConfig, clientConfig);
 	}
