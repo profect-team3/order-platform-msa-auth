@@ -37,24 +37,40 @@ public class AuthService {
 
 	@Transactional
 	public LoginResponse login(LoginRequest request) {
+		log.debug("로그인 요청 수신 - username: {}", request.getUsername());
+
 		User user = userRepository.findByUsername(request.getUsername())
-			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+			.orElseThrow(() -> {
+				log.warn("로그인 실패 - 존재하지 않는 사용자: {}", request.getUsername());
+				return new GeneralException(ErrorStatus.USER_NOT_FOUND);
+			});
 
 		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+			log.warn("로그인 실패 - 잘못된 비밀번호, username: {}", request.getUsername());
 			throw new GeneralException(UserErrorStatus.INVALID_PASSWORD);
 		}
 
-		String roles =user.getUserRole().name();
+		String roles = user.getUserRole().name();
 
-		String accessToken = accessTokenProvider.createAccessToken(user.getUserId().toString(), roles);
+		String accessToken = accessTokenProvider.createAccessToken(
+			user.getUserId().toString(), roles
+		);
 		String refreshToken = accessTokenProvider.createRefreshToken();
 
-		redisTemplate.opsForValue().set(
-			REFRESH_TOKEN_PREFIX + user.getUserId(),
-			refreshToken,
-			jwtTokenProvider.getRefreshTokenValidityMs(),
-			TimeUnit.MILLISECONDS
-		);
+		try {
+			redisTemplate.opsForValue().set(
+				REFRESH_TOKEN_PREFIX + user.getUserId(),
+				refreshToken,
+				jwtTokenProvider.getRefreshTokenValidityMs(),
+				TimeUnit.MILLISECONDS
+			);
+			log.debug("Redis에 refresh token 저장 완료 - userId: {}", user.getUserId());
+		} catch (Exception e) {
+			log.error("Redis 저장 중 오류 발생 - userId: {}", user.getUserId(), e);
+			throw e;
+		}
+
+		log.info("로그인 성공 - userId: {}, role: {}", user.getUserId(), roles);
 
 		return LoginResponse.builder()
 			.accessToken(accessToken)
