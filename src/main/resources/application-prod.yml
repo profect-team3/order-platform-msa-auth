@@ -7,7 +7,6 @@ spring:
 
   data:
     redis:
-      protocol: ${REDIS_PROTOCOL}
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
       database: 0
