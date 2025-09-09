@@ -22,9 +22,6 @@ public class RedisConfig {
 	@Value("${REDIS_PORT}")
 	private int redisPort;
 
-	@Value("${REDIS_PASSWORD}")
-	private String redisPassword;
-
 	@Bean
 	public LettuceConnectionFactory redisConnectionFactory() {
 		RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
