@@ -2,7 +2,7 @@ name: ECR Push - auth
 
 on:
   push:
-    branches: ["stage", "dev"]
+    branches: ["stage", "dev", "refactor/elasticache"]
 
 jobs:
   build-and-push:
