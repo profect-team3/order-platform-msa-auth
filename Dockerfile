@@ -19,6 +19,8 @@ WORKDIR /app
 
 COPY --from=builder /workspace/build/libs/*.jar /app/application.jar
 
+RUN mkdir -p /var/log/app
+
 EXPOSE 8083
 
 ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "/app/application.jar"]
