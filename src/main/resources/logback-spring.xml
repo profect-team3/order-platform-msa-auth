@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true">
 
-    <!-- Common Appenders -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
@@ -17,7 +16,6 @@
         </rollingPolicy>
     </appender>
 
-    <!-- Dev Profile -->
     <springProfile name="dev">
         <logger name="app" level="DEBUG" additivity="false">
             <appender-ref ref="CONSOLE"/>
@@ -33,19 +31,18 @@
         </root>
     </springProfile>
 
-    <!-- Prod Profile -->
     <springProfile name="prod">
         <logger name="app" level="INFO" additivity="false">
-            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
         </logger>
         <logger name="org.springframework" level="WARN" additivity="false">
-            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
         </logger>
         <logger name="org.hibernate" level="WARN" additivity="false">
-            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
         </logger>
         <root level="INFO">
-            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
         </root>
     </springProfile>
 
