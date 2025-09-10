@@ -15,7 +15,7 @@ spring:
         show_sql: true
         use_sql_comments: true
   profiles:
-    active: dev
+    active: prod
 
 server:
   port: 8083
