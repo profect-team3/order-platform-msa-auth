@@ -26,7 +26,7 @@ public class RedisConfig {
 	@Value("${REDIS_PASSWORD:}") // 빈 문자열 기본값
 	private String redisPassword;
 
-	@Value("${REDIS_PROTOCOL}")
+	@Value("${REDIS_PROTOCOL:redis}")
 	private String redisProtocol;
 
 	@Bean
