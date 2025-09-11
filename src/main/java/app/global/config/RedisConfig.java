@@ -1,5 +1,7 @@
 package app.global.config;
 
+import java.time.Duration;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,9 +11,8 @@ import org.springframework.data.redis.connection.lettuce.LettuceClientConfigurat
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+// import com.fasterxml.jackson.databind.ObjectMapper;
+// import com.fasterxml.jackson.databind.SerializationFeature;
 
 @Configuration
 public class RedisConfig {
@@ -22,7 +23,7 @@ public class RedisConfig {
 	@Value("${REDIS_PORT}")
 	private int redisPort;
 
-	@Value("${REDIS_PASSWORD}")
+	@Value("${REDIS_PASSWORD:}") // 빈 문자열 기본값
 	private String redisPassword;
 
 	@Value("${REDIS_PROTOCOL}")
@@ -30,17 +31,28 @@ public class RedisConfig {
 
 	@Bean
 	public LettuceConnectionFactory redisConnectionFactory() {
-		RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration(redisHost, redisPort);
-
-		LettuceClientConfiguration clientConfig;
+		RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
+		redisConfig.setHostName(redisHost);
+		redisConfig.setPort(redisPort);
 
 		if (redisPassword != null && !redisPassword.isBlank()) {
 			redisConfig.setPassword(redisPassword);
-			clientConfig = LettuceClientConfiguration.builder().build();
-		} else {
-			clientConfig = LettuceClientConfiguration.builder().useSsl().build();
 		}
 
+		LettuceClientConfiguration.LettuceClientConfigurationBuilder clientConfigBuilder =
+			LettuceClientConfiguration.builder()
+				.commandTimeout(Duration.ofSeconds(60))
+				.shutdownTimeout(Duration.ofMillis(100));
+
+		if ("rediss".equalsIgnoreCase(redisProtocol)) {
+			clientConfigBuilder.useSsl();
+		}
+
+		// if ("rediss".equalsIgnoreCase(redisProtocol) || redisPort == 6380) {
+		// 	clientConfigBuilder.useSsl();
+		// }
+
+		LettuceClientConfiguration clientConfig = clientConfigBuilder.build();
 		return new LettuceConnectionFactory(redisConfig, clientConfig);
 	}
 
@@ -53,12 +65,5 @@ public class RedisConfig {
 		template.setHashKeySerializer(new StringRedisSerializer());
 		template.setHashValueSerializer(new StringRedisSerializer());
 		return template;
-	}
-
-	@Bean
-	public ObjectMapper redisObjectMapper() {
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-		return mapper;
 	}
 }
