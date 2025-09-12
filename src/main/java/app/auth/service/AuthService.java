@@ -19,6 +19,7 @@ import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import app.global.jwt.AccessTokenProvider;
 import app.global.jwt.JwtTokenProvider;
+import app.global.util.PiiMasker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,16 +38,16 @@ public class AuthService {
 
 	@Transactional
 	public LoginResponse login(LoginRequest request) {
-		log.debug("로그인 요청 수신 - username: {}", request.getUsername());
+		log.debug("로그인 요청 수신 - username: {}", PiiMasker.mask(request.getUsername()));
 
 		User user = userRepository.findByUsername(request.getUsername())
 			.orElseThrow(() -> {
-				log.warn("로그인 실패 - 존재하지 않는 사용자: {}", request.getUsername());
+				log.warn("로그인 실패 - 존재하지 않는 사용자: {}", PiiMasker.mask(request.getUsername()));
 				return new GeneralException(ErrorStatus.USER_NOT_FOUND);
 			});
 
 		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-			log.warn("로그인 실패 - 잘못된 비밀번호, username: {}", request.getUsername());
+			log.warn("로그인 실패 - 잘못된 비밀번호, username: {}", PiiMasker.mask(request.getUsername()));
 			throw new GeneralException(UserErrorStatus.INVALID_PASSWORD);
 		}
 
