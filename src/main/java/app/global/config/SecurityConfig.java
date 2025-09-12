@@ -62,8 +62,8 @@ public class SecurityConfig {
   @Bean
   public JwtAuthenticationConverter jwtAuthenticationConverter() {
     JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-    grantedAuthoritiesConverter.setAuthoritiesClaimName("roles"); // Assuming roles are in a "roles" claim
-    grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_"); // Optional: Add a prefix to roles
+    grantedAuthoritiesConverter.setAuthoritiesClaimName("roles");
+    grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
 
     JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
     jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
