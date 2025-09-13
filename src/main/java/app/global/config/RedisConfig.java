@@ -11,8 +11,6 @@ import org.springframework.data.redis.connection.lettuce.LettuceClientConfigurat
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-// import com.fasterxml.jackson.databind.ObjectMapper;
-// import com.fasterxml.jackson.databind.SerializationFeature;
 
 @Configuration
 public class RedisConfig {
@@ -23,10 +21,10 @@ public class RedisConfig {
 	@Value("${REDIS_PORT}")
 	private int redisPort;
 
-	@Value("${REDIS_PASSWORD:}") // 빈 문자열 기본값
+	@Value("${REDIS_PASSWORD:}")
 	private String redisPassword;
 
-	@Value("${REDIS_PROTOCOL}")
+	@Value("${REDIS_PROTOCOL:redis}")
 	private String redisProtocol;
 
 	@Bean
@@ -47,10 +45,6 @@ public class RedisConfig {
 		if ("rediss".equalsIgnoreCase(redisProtocol)) {
 			clientConfigBuilder.useSsl();
 		}
-
-		// if ("rediss".equalsIgnoreCase(redisProtocol) || redisPort == 6380) {
-		// 	clientConfigBuilder.useSsl();
-		// }
 
 		LettuceClientConfiguration clientConfig = clientConfigBuilder.build();
 		return new LettuceConnectionFactory(redisConfig, clientConfig);
