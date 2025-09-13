@@ -24,7 +24,7 @@ public class RedisConfig {
 	@Value("${REDIS_PASSWORD:}")
 	private String redisPassword;
 
-	@Value("${REDIS_PROTOCOL:redis}")
+	@Value("${REDIS_PROTOCOL:spring.data.redis.protocol}")
 	private String redisProtocol;
 
 	@Bean
