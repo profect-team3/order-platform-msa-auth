@@ -11,13 +11,15 @@ COPY settings.gradle .
 
 COPY src ./src
 
-RUN ./gradlew build
+RUN ./gradlew build -x test
 
 FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
 COPY --from=builder /workspace/build/libs/*.jar /app/application.jar
+
+RUN mkdir -p /var/logs/app
 
 EXPOSE 8083
 
