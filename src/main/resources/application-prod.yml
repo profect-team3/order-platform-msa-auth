@@ -24,3 +24,9 @@ kms:
     key-id: ${KMS_JWT_KEY_ID}
     region: ${AWS_REGION}
     enabled: true
+
+logging:
+  file:
+    name: /var/log/app/app.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"
