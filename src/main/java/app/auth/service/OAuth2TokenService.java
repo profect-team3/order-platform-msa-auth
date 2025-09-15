@@ -20,7 +20,6 @@ public class OAuth2TokenService {
 			throw new IllegalArgumentException("Missing required parameter: userRole");
 		}
 
-
 		String accessToken = jwtTokenProvider.createInternalToken(userId,userRole);
 		long expiresIn = jwtTokenProvider.getInternalTokenValidityMs() / 1000;
 

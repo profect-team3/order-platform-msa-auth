@@ -7,6 +7,7 @@ spring:
 
   data:
     redis:
+      protocol: ${REDIS_PROTOCOL:redis}
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
@@ -21,5 +22,5 @@ jwt:
 
 kms:
   jwt:
-    key-id: ${KMS_JWT_KEY_ID}
+    key-id: ${KMS_JWT_KEY_ID:default}
     enabled: false

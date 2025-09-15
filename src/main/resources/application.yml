@@ -14,6 +14,11 @@ spring:
         format_sql: true
         show_sql: true
         use_sql_comments: true
+  profiles:
+    active: prod
 
 server:
   port: 8083
+
+log:
+  salt: ${LOG_SALT:default_salt_for_dev}

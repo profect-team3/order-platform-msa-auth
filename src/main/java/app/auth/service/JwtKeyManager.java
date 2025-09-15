@@ -27,7 +27,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.kms.KmsClient;
 import software.amazon.awssdk.services.kms.model.GetPublicKeyRequest;
-import software.amazon.awssdk.services.kms.model.GetPublicKeyResponse;
 import java.security.Signature;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kms.model.MessageType;
@@ -41,14 +40,12 @@ public class JwtKeyManager {
 
   private volatile Map<String, List<Map<String, Object>>> cachedJwks;
 
-  // KMS
   private final boolean kmsEnabled;
-  private final String kmsKeyIdConfigured; // 설정값(alias or key arn)
+  private final String kmsKeyIdConfigured;
   private final KmsClient kmsClient;
   private volatile RSAPublicKey kmsPublicKey;
-  private volatile String activeKid;       // <= 공통: 현재 kid (로컬/KMS)
+  private volatile String activeKid;
 
-  // Local
   private final Map<String, KeyEntry> localKeys = new ConcurrentHashMap<>();
 
   @Autowired
@@ -79,16 +76,14 @@ public class JwtKeyManager {
     try {
       var resp = kmsClient.getPublicKey(GetPublicKeyRequest.builder()
           .keyId(kmsKeyIdConfigured).build());
-
-      // kid는 KMS가 돌려준 실제 KeyId(ARN)를 사용 (alias 대비)
       this.activeKid = resp.keyId();
 
       byte[] publicKeyBytes = resp.publicKey().asByteArray();
       var keySpec = new X509EncodedKeySpec(publicKeyBytes);
       var keyFactory = KeyFactory.getInstance("RSA");
       this.kmsPublicKey = (RSAPublicKey) keyFactory.generatePublic(keySpec);
+      this.cachedJwks = null;
 
-      this.cachedJwks = null; // invalidate
       log.info("KMS public key loaded. kid={}", this.activeKid);
     } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
       throw new IllegalStateException("Failed to load public key from KMS", e);
@@ -99,12 +94,10 @@ public class JwtKeyManager {
     rotateKey();
   }
 
-  /** 공통 API: 현재 kid 반환 */
   public String getActiveKid() {
     return this.activeKid;
   }
 
-  /** 공통 API: 현재 공개키 반환 (KMS/Local) */
   public RSAPublicKey getActivePublicKey() {
     if (kmsEnabled) {
       if (kmsPublicKey == null) throw new IllegalStateException("KMS public key not initialized");
@@ -115,14 +108,12 @@ public class JwtKeyManager {
     return (RSAPublicKey) key.keyPair().getPublic();
   }
 
-  /** 공통 API: RS256 서명 */
   public byte[] signRs256(byte[] message) {
     try {
       if (kmsEnabled) {
-        // KMS는 digest 또는 raw message로 서명 가능. 성능 위해 digest 권장
         var digest = sha256(message);
         var signResp = kmsClient.sign(SignRequest.builder()
-            .keyId(activeKid) // 실제 키 ARN
+            .keyId(activeKid)
             .message(SdkBytes.fromByteArray(digest))
             .messageType(MessageType.DIGEST)
             .signingAlgorithm(SigningAlgorithmSpec.RSASSA_PKCS1_V1_5_SHA_256)
@@ -149,7 +140,6 @@ public class JwtKeyManager {
     }
   }
 
-  /** JWKS 제공 (공통) */
   public Map<String, List<Map<String, Object>>> getJwks() {
     var cache = this.cachedJwks;
     if (cache != null) return cache;
@@ -180,8 +170,6 @@ public class JwtKeyManager {
     );
   }
 
-  // === Local 전용 ===
-
   public KeyEntry rotateKey() {
     if (kmsEnabled) {
       throw new UnsupportedOperationException("Local rotateKey is not allowed in KMS mode.");
@@ -201,10 +189,8 @@ public class JwtKeyManager {
     }
   }
 
-  /** (호환용) 기존 호출이 있으면 KMS 모드에서도 NPE 나지 않게 안전 반환 */
   public KeyEntry getActiveKey() {
     if (kmsEnabled) {
-      // keyPair는 없지만 kid는 반환하여 호출부가 kid/JWKS용으로 쓰게 함
       return new KeyEntry(this.activeKid, null, null);
     }
     return localKeys.get(activeKid);
@@ -226,13 +212,12 @@ public class JwtKeyManager {
     return localKeys.values();
   }
 
-  // === (옵션) KMS 공개키 주기적 리프레시: alias 스위치 대응 ===
   @Scheduled(fixedDelayString = "PT5M")
   public void refreshKmsPublicKey() {
     if (!kmsEnabled) return;
     try {
       var oldKid = this.activeKid;
-      initKms(); // 재조회
+      initKms();
       if (!this.activeKid.equals(oldKid)) {
         log.info("KMS key rotated. oldKid={} newKid={}", oldKid, this.activeKid);
       }
