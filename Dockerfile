@@ -19,7 +19,7 @@ WORKDIR /app
 
 COPY --from=builder /workspace/build/libs/*.jar /app/application.jar
 
-RUN mkdir -p /var/logs/app
+RUN mkdir -p /var/log/app
 
 EXPOSE 8083
 
