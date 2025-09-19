@@ -1,6 +1,7 @@
 package app.global.jwt;
 
 import app.auth.model.entity.KeyEntry;
+
 import app.auth.service.JwtKeyManager;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.security.SignatureException;
@@ -16,7 +17,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,17 +58,17 @@ class JwtTokenProviderTest {
 	void createAccessToken_ShouldContainCorrectClaims() {
 		// given
 		String userId = "user123";
-		List<String> roles = List.of("USER", "ADMIN");
+		String role ="CUSTOMER";
 		when(jwtKeyManager.getActiveKey()).thenReturn(testKeyEntry);
 
 		// when
-		String token =localTokenProvider.createAccessToken(userId, roles);
+		String token =localTokenProvider.createAccessToken(userId, role);
 
 		// then
 		assertThat(token).isNotNull();
 		Claims claims = jwtTokenProvider.parseClaims(token);
 		assertThat(claims.getSubject()).isEqualTo(userId);
-		assertThat((List<String>) claims.get("roles")).containsExactlyElementsOf(roles);
+		assertThat(claims.get("user_role")).isEqualTo(role);
 	}
 
 	@Test
@@ -77,7 +77,7 @@ class JwtTokenProviderTest {
 		// given
 		when(jwtKeyManager.getActiveKey()).thenReturn(testKeyEntry);
 		when(jwtKeyManager.getKeyById(testKid)).thenReturn(Optional.of(testKeyEntry));
-		String token = localTokenProvider.createAccessToken("user123", List.of("USER"));
+		String token = localTokenProvider.createAccessToken("user123", "USER");
 
 		// when
 		boolean isValid = jwtTokenProvider.validateToken(token);
@@ -91,7 +91,7 @@ class JwtTokenProviderTest {
 	void validateToken_WithInvalidSignature_ShouldReturnFalse() throws NoSuchAlgorithmException {
 		// given
 		when(jwtKeyManager.getActiveKey()).thenReturn(testKeyEntry);
-		String token = localTokenProvider.createAccessToken("user123", List.of("USER"));
+		String token = localTokenProvider.createAccessToken("user123", "USER");
 
 		KeyPair otherKeyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
 		KeyEntry otherKeyEntry = new KeyEntry("other-kid", otherKeyPair);
@@ -111,7 +111,7 @@ class JwtTokenProviderTest {
 	void validateToken_WithUnknownKid_ShouldReturnFalse() {
 		// given
 		when(jwtKeyManager.getActiveKey()).thenReturn(testKeyEntry);
-		String token = localTokenProvider.createAccessToken("user123", List.of("USER"));
+		String token = localTokenProvider.createAccessToken("user123", "USER");
 
 		when(jwtKeyManager.getKeyById(testKid)).thenReturn(Optional.empty());
 

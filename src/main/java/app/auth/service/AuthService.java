@@ -15,10 +15,11 @@ import app.auth.model.dto.request.LoginRequest;
 import app.auth.model.dto.response.LoginResponse;
 import app.auth.model.entity.User;
 import app.auth.status.UserErrorStatus;
-import app.commonUtil.apiPayload.code.status.ErrorStatus;
-import app.commonUtil.apiPayload.exception.GeneralException;
+import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.apiPayload.exception.GeneralException;
 import app.global.jwt.AccessTokenProvider;
 import app.global.jwt.JwtTokenProvider;
+import app.global.util.PiiMasker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,24 +38,40 @@ public class AuthService {
 
 	@Transactional
 	public LoginResponse login(LoginRequest request) {
+		log.debug("로그인 요청 수신 - username: {}", PiiMasker.mask(request.getUsername()));
+
 		User user = userRepository.findByUsername(request.getUsername())
-			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+			.orElseThrow(() -> {
+				log.warn("로그인 실패 - 존재하지 않는 사용자: {}", PiiMasker.mask(request.getUsername()));
+				return new GeneralException(ErrorStatus.USER_NOT_FOUND);
+			});
 
 		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+			log.warn("로그인 실패 - 잘못된 비밀번호, username: {}", PiiMasker.mask(request.getUsername()));
 			throw new GeneralException(UserErrorStatus.INVALID_PASSWORD);
 		}
 
-		List<String> roles = List.of(user.getUserRole().name());
+		String roles = user.getUserRole().name();
 
-		String accessToken = accessTokenProvider.createAccessToken(user.getUserId().toString(), roles);
-		String refreshToken = jwtTokenProvider.createRefreshToken();
-
-		redisTemplate.opsForValue().set(
-			REFRESH_TOKEN_PREFIX + user.getUserId(),
-			refreshToken,
-			jwtTokenProvider.getRefreshTokenValidityMs(),
-			TimeUnit.MILLISECONDS
+		String accessToken = accessTokenProvider.createAccessToken(
+			user.getUserId().toString(), roles
 		);
+		String refreshToken = accessTokenProvider.createRefreshToken();
+
+		try {
+			redisTemplate.opsForValue().set(
+				REFRESH_TOKEN_PREFIX + user.getUserId(),
+				refreshToken,
+				jwtTokenProvider.getRefreshTokenValidityMs(),
+				TimeUnit.MILLISECONDS
+			);
+			log.debug("Redis에 refresh token 저장 완료 - userId: {}", user.getUserId());
+		} catch (Exception e) {
+			log.error("Redis 저장 중 오류 발생 - userId: {}", user.getUserId(), e);
+			throw e;
+		}
+
+		log.info("로그인 성공 - userId: {}, role: {}", user.getUserId(), roles);
 
 		return LoginResponse.builder()
 			.accessToken(accessToken)

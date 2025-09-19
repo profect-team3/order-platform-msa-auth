@@ -27,32 +27,34 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.kms.KmsClient;
 import software.amazon.awssdk.services.kms.model.GetPublicKeyRequest;
-import software.amazon.awssdk.services.kms.model.GetPublicKeyResponse;
+import java.security.Signature;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.kms.model.MessageType;
+import software.amazon.awssdk.services.kms.model.SignRequest;
+import software.amazon.awssdk.services.kms.model.SigningAlgorithmSpec;
+
 
 @Slf4j
 @Component
 public class JwtKeyManager {
 
-  // --- Common Fields ---
   private volatile Map<String, List<Map<String, Object>>> cachedJwks;
 
-  // --- KMS Mode Fields ---
   private final boolean kmsEnabled;
-  private final String kmsKeyId;
+  private final String kmsKeyIdConfigured;
   private final KmsClient kmsClient;
-  private PublicKey kmsPublicKey;
-
-  // --- Local Mode Fields ---
-  private final Map<String, KeyEntry> localKeys = new ConcurrentHashMap<>();
+  private volatile RSAPublicKey kmsPublicKey;
   private volatile String activeKid;
+
+  private final Map<String, KeyEntry> localKeys = new ConcurrentHashMap<>();
 
   @Autowired
   public JwtKeyManager(
       @Value("${kms.jwt.enabled}") boolean kmsEnabled,
-      @Value("${kms.jwt.key-id}") String kmsKeyId,
+      @Value("${kms.jwt.key-id:}") String kmsKeyId,
       Optional<KmsClient> kmsClient) {
     this.kmsEnabled = kmsEnabled;
-    this.kmsKeyId = kmsKeyId;
+    this.kmsKeyIdConfigured = kmsKeyId;
     this.kmsClient = kmsClient.orElse(null);
   }
 
@@ -72,13 +74,17 @@ public class JwtKeyManager {
       throw new IllegalStateException("KMS mode is enabled, but KmsClient is not available.");
     }
     try {
-      GetPublicKeyRequest request = GetPublicKeyRequest.builder().keyId(kmsKeyId).build();
-      GetPublicKeyResponse response = kmsClient.getPublicKey(request);
-      byte[] publicKeyBytes = response.publicKey().asByteArray();
-      X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
-      KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-      this.kmsPublicKey = keyFactory.generatePublic(keySpec);
-      this.cachedJwks = null; // Invalidate cache on init
+      var resp = kmsClient.getPublicKey(GetPublicKeyRequest.builder()
+          .keyId(kmsKeyIdConfigured).build());
+      this.activeKid = resp.keyId();
+
+      byte[] publicKeyBytes = resp.publicKey().asByteArray();
+      var keySpec = new X509EncodedKeySpec(publicKeyBytes);
+      var keyFactory = KeyFactory.getInstance("RSA");
+      this.kmsPublicKey = (RSAPublicKey) keyFactory.generatePublic(keySpec);
+      this.cachedJwks = null;
+
+      log.info("KMS public key loaded. kid={}", this.activeKid);
     } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
       throw new IllegalStateException("Failed to load public key from KMS", e);
     }
@@ -88,84 +94,95 @@ public class JwtKeyManager {
     rotateKey();
   }
 
-  public Map<String, List<Map<String, Object>>> getJwks() {
-    if (this.cachedJwks != null) {
-      return this.cachedJwks;
-    }
+  public String getActiveKid() {
+    return this.activeKid;
+  }
 
+  public RSAPublicKey getActivePublicKey() {
     if (kmsEnabled) {
-      this.cachedJwks = buildJwksFromKms();
+      if (kmsPublicKey == null) throw new IllegalStateException("KMS public key not initialized");
+      return kmsPublicKey;
+    }
+    var key = localKeys.get(activeKid);
+    if (key == null) throw new IllegalStateException("No active local key");
+    return (RSAPublicKey) key.keyPair().getPublic();
+  }
+
+  public byte[] signRs256(byte[] message) {
+    try {
+      if (kmsEnabled) {
+        var digest = sha256(message);
+        var signResp = kmsClient.sign(SignRequest.builder()
+            .keyId(activeKid)
+            .message(SdkBytes.fromByteArray(digest))
+            .messageType(MessageType.DIGEST)
+            .signingAlgorithm(SigningAlgorithmSpec.RSASSA_PKCS1_V1_5_SHA_256)
+            .build());
+        return signResp.signature().asByteArray();
+      } else {
+        var privateKey = localKeys.get(activeKid).keyPair().getPrivate();
+        var sig = Signature.getInstance("SHA256withRSA");
+        sig.initSign(privateKey);
+        sig.update(message);
+        return sig.sign();
+      }
+    } catch (Exception e) {
+      throw new IllegalStateException("JWT signing failed", e);
+    }
+  }
+
+  private static byte[] sha256(byte[] msg) {
+    try {
+      var md = java.security.MessageDigest.getInstance("SHA-256");
+      return md.digest(msg);
+    } catch (NoSuchAlgorithmException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public Map<String, List<Map<String, Object>>> getJwks() {
+    var cache = this.cachedJwks;
+    if (cache != null) return cache;
+
+    List<Map<String, Object>> jwkList;
+    if (kmsEnabled) {
+      jwkList = List.of(convertRsaPublicKeyToJwk(getActivePublicKey(), getActiveKid()));
     } else {
-      this.cachedJwks = buildJwksFromLocal();
+      jwkList = getAllKeys().stream()
+          .map(e -> convertRsaPublicKeyToJwk((RSAPublicKey) e.keyPair().getPublic(), e.kid()))
+          .collect(Collectors.toList());
     }
-    return this.cachedJwks;
-  }
-
-  private Map<String, List<Map<String, Object>>> buildJwksFromKms() {
-    if (this.kmsPublicKey == null) {
-      throw new IllegalStateException("KMS public key is not initialized.");
-    }
-    RSAPublicKey rsaPublicKey = (RSAPublicKey) this.kmsPublicKey;
-    List<Map<String, Object>> jwkList =
-        List.of(convertRsaPublicKeyToJwk(rsaPublicKey, this.kmsKeyId));
-    return Map.of("keys", jwkList);
-  }
-
-  private Map<String, List<Map<String, Object>>> buildJwksFromLocal() {
-    List<Map<String, Object>> jwkList =
-        this.getAllKeys().stream()
-            .map(
-                entry -> {
-                  RSAPublicKey pub = (RSAPublicKey) entry.keyPair().getPublic();
-                  return convertRsaPublicKeyToJwk(pub, entry.kid());
-                })
-            .collect(Collectors.toList());
-    return Map.of("keys", jwkList);
+    return this.cachedJwks = Map.of("keys", jwkList);
   }
 
   private Map<String, Object> convertRsaPublicKeyToJwk(RSAPublicKey rsaPublicKey, String kid) {
     byte[] nBytes = stripLeadingZero(rsaPublicKey.getModulus().toByteArray());
     byte[] eBytes = stripLeadingZero(rsaPublicKey.getPublicExponent().toByteArray());
-
     String n = Base64.getUrlEncoder().withoutPadding().encodeToString(nBytes);
     String e = Base64.getUrlEncoder().withoutPadding().encodeToString(eBytes);
-
     return Map.of(
         "kty", "RSA",
         "kid", kid,
         "use", "sig",
         "alg", "RS256",
         "n", n,
-        "e", e);
+        "e", e
+    );
   }
-
-  private static byte[] stripLeadingZero(byte[] bytes) {
-    if (bytes.length > 1 && bytes[0] == 0x00) {
-      byte[] copy = new byte[bytes.length - 1];
-      System.arraycopy(bytes, 1, copy, 0, copy.length);
-      return copy;
-    }
-    return bytes;
-  }
-
-  // --- Local Mode Methods ---
 
   public KeyEntry rotateKey() {
     if (kmsEnabled) {
-      throw new UnsupportedOperationException("Key rotation is not supported in KMS mode.");
+      throw new UnsupportedOperationException("Local rotateKey is not allowed in KMS mode.");
     }
     try {
-      KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-      keyPairGenerator.initialize(2048);
-      KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
+      var gen = KeyPairGenerator.getInstance("RSA");
+      gen.initialize(2048);
+      KeyPair keyPair = gen.generateKeyPair();
       String kid = UUID.randomUUID().toString();
       KeyEntry newKey = new KeyEntry(kid, keyPair, Instant.now());
-
       this.localKeys.put(kid, newKey);
       this.activeKid = kid;
-      this.cachedJwks = null; // Invalidate cache
-
+      this.cachedJwks = null;
       return newKey;
     } catch (NoSuchAlgorithmException e) {
       throw new IllegalStateException("RSA key generation failed", e);
@@ -174,16 +191,15 @@ public class JwtKeyManager {
 
   public KeyEntry getActiveKey() {
     if (kmsEnabled) {
-      throw new UnsupportedOperationException("Active key is not available in KMS mode.");
+      return new KeyEntry(this.activeKid, null, null);
     }
     return localKeys.get(activeKid);
   }
 
   public Optional<KeyEntry> getKeyById(String kid) {
     if (kmsEnabled) {
-      // In KMS mode, we only have one key. Check if the provided kid matches.
-      return this.kmsKeyId.equals(kid)
-          ? Optional.of(new KeyEntry(this.kmsKeyId, null, null)) // KeyPair and Instant are not available
+      return this.activeKid != null && this.activeKid.equals(kid)
+          ? Optional.of(new KeyEntry(this.activeKid, null, null))
           : Optional.empty();
     }
     return Optional.ofNullable(localKeys.get(kid));
@@ -196,19 +212,26 @@ public class JwtKeyManager {
     return localKeys.values();
   }
 
-  @Scheduled(cron = "0 0 0 * * ?")
-  public void removeOldKeys() {
-    if (kmsEnabled) {
-      return; // Do nothing in KMS mode
+  @Scheduled(fixedDelayString = "PT5M")
+  public void refreshKmsPublicKey() {
+    if (!kmsEnabled) return;
+    try {
+      var oldKid = this.activeKid;
+      initKms();
+      if (!this.activeKid.equals(oldKid)) {
+        log.info("KMS key rotated. oldKid={} newKid={}", oldKid, this.activeKid);
+      }
+    } catch (Exception e) {
+      log.warn("KMS public key refresh failed: {}", e.toString());
     }
-    Instant cutoff = Instant.now().minus(Duration.ofDays(7));
-    boolean removed =
-        localKeys.entrySet().removeIf(
-            entry ->
-                !entry.getKey().equals(activeKid) && entry.getValue().createdAt().isBefore(cutoff));
+  }
 
-    if (removed) {
-      this.cachedJwks = null; // Invalidate cache
+  private static byte[] stripLeadingZero(byte[] bytes) {
+    if (bytes.length > 1 && bytes[0] == 0x00) {
+      byte[] copy = new byte[bytes.length - 1];
+      System.arraycopy(bytes, 1, copy, 0, copy.length);
+      return copy;
     }
+    return bytes;
   }
 }

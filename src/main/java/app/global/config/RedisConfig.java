@@ -1,16 +1,54 @@
 package app.global.config;
 
+import java.time.Duration;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
 @Configuration
 public class RedisConfig {
+
+	@Value("${REDIS_HOST}")
+	private String redisHost;
+
+	@Value("${REDIS_PORT}")
+	private int redisPort;
+
+	@Value("${REDIS_PASSWORD:}")
+	private String redisPassword;
+
+	@Value("${REDIS_PROTOCOL:spring.data.redis.protocol}")
+	private String redisProtocol;
+
+	@Bean
+	public LettuceConnectionFactory redisConnectionFactory() {
+		RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration();
+		redisConfig.setHostName(redisHost);
+		redisConfig.setPort(redisPort);
+
+		if (redisPassword != null && !redisPassword.isBlank()) {
+			redisConfig.setPassword(redisPassword);
+		}
+
+		LettuceClientConfiguration.LettuceClientConfigurationBuilder clientConfigBuilder =
+			LettuceClientConfiguration.builder()
+				.commandTimeout(Duration.ofSeconds(60))
+				.shutdownTimeout(Duration.ofMillis(100));
+
+		if ("rediss".equalsIgnoreCase(redisProtocol)) {
+			clientConfigBuilder.useSsl();
+		}
+
+		LettuceClientConfiguration clientConfig = clientConfigBuilder.build();
+		return new LettuceConnectionFactory(redisConfig, clientConfig);
+	}
 
 	@Bean
 	public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory connectionFactory) {
@@ -21,12 +59,5 @@ public class RedisConfig {
 		template.setHashKeySerializer(new StringRedisSerializer());
 		template.setHashValueSerializer(new StringRedisSerializer());
 		return template;
-	}
-
-	@Bean
-	public ObjectMapper redisObjectMapper() {
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-		return mapper;
 	}
 }

@@ -10,9 +10,8 @@ COPY build.cloud.gradle build.gradle
 COPY settings.gradle .
 
 COPY src ./src
-COPY libs ./libs
 
-RUN ./gradlew build
+RUN ./gradlew bootJar -x test
 
 FROM eclipse-temurin:17-jre-jammy
 
